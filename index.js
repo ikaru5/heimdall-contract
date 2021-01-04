@@ -1,4 +1,4 @@
-import { validate, validateArray, validateProperty, getErrorMessageFor, getGenericErrorMessage } from "./validation-base";
+import { validate, validateArray, validateProperty, getErrorMessageFor, getGenericErrorMessage } from "./validation-base.js";
 
 /**
  * Provides a class based value holder.

@@ -1,4 +1,4 @@
-import _validations from "./validations"
+import _validations from "./validations.js"
 
 /**
  * Iterate recursively over the schema and call _validateProperty to validate the elements.
