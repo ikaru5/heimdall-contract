@@ -13,7 +13,7 @@ export default class Index {
   //  Constructor and Init
   // -----------------------------------------------------------------------------------------------
 
-  constructor(initNested, initAll) {
+  constructor(options) {
     // outsourced validation logic
     this._validate = validate.bind(this)
     this._validateArray = validateArray.bind(this)
@@ -30,13 +30,17 @@ export default class Index {
       ]
     }
     this.setConfig()
-    this.schema = this.defineSchema()
+    if (options?.schema) {
+      this.schema = options.schema
+    } else {
+      this.schema = this.defineSchema()
+    }
     this.init()
-    if ("function" === typeof initNested) {
-      this.initNested = initNested.bind(this)
+    if ("function" === typeof options?.initNested) {
+      this.initNested = options.initNested.bind(this)
       this.initNested()
     }
-    if ("function" === typeof initAll) this.initAll = initAll.bind(this)
+    if ("function" === typeof options?.initAll) this.initAll = options.initAll.bind(this)
     if ("function" === typeof this.initAll) this.initAll()
     this._define(this.schema, [])
 
@@ -240,13 +244,13 @@ export default class Index {
   }
 
   /**
-   * Returns a default empty value for a dType. Provide Contract-Class for nested empty contract!
+   * Returns a default empty value for a dType. Provide Contract-Class or schema-definition for nested empty contract!
    * @param dType
-   * @param contractClass contract Class for empty contract
+   * @param contract contract Class or definition for empty contract
    * @returns {*[]|string|*|null|[]|string|undefined}
    * @private
    */
-  _defaultEmptyValueFor(dType, contractClass) {
+  _defaultEmptyValueFor(dType, contract) {
     switch (dType) {
       case "String":
         return ""
@@ -259,7 +263,12 @@ export default class Index {
       case "Array":
         return []
       case "Contract":
-        let newContract = new contractClass(this.initNested, this.initAll)
+        let newContract = undefined
+        if ("function" === typeof contract) {
+          newContract = new contract({ initNested: this.initNested, initAll: this.initAll })
+        } else {
+          newContract = new Index({ schema: contract, initNested: this.initNested, initAll: this.initAll })
+        }
         newContract._parseParent(this)
         return newContract
       default:

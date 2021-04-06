@@ -1,14 +1,22 @@
 {
   "name": "@ikaru5/heimdall-contract",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Validation and Representer Objects in your Frontend",
   "license": "MIT",
   "repository": "ikaru5/heimdall-contract",
   "main": "index.js",
   "keywords": [
     "heimddall",
-    "cpontract",
+    "contract",
     "validation",
     "representer"
-  ]
+  ],
+  "devDependencies": {
+    "@babel/preset-env": "^7.13.12",
+    "babel-jest": "^26.6.3",
+    "jest": "^26.6.3"
+  },
+  "scripts": {
+    "test": "jest"
+  }
 }

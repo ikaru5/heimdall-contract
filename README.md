@@ -7,7 +7,9 @@ This is still in development... More to come!
 
 ## Development
 
-- [ ] add tests
+- [ ] add more tests
+- [ ] add new dType: "StringNumber" for stringed numbers
+- [ ] make dType validation skipable
 - [ ] write README :D
 
 ## Contributing

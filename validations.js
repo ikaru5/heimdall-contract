@@ -26,16 +26,9 @@ const validationDefinitions = {
       check: (value, isAllowed, dType, depth, contract) => {
         if ("function" === typeof isAllowed) isAllowed = isAllowed(value, contract, dType, depth)
         if (undefined === isAllowed) return false
+        if (!isAllowed) return false
 
-        if (isAllowed) {
-          return (undefined === value || null === value || 0 === value.length || true === value.isAssignedEmpty)
-        } else {
-          if ("Array" === dType || "String" === dType) {
-            return (undefined !== value && null !== value && 0 < value.length)
-          }
-          if("Contract" === dType) return true !== value.isAssignedEmpty
-          return (undefined !== value && null !== value)
-        }
+        return (undefined === value || null === value || 0 === value.length || true === value.isAssignedEmpty)
       },
     }
   },
@@ -71,31 +64,44 @@ const validationDefinitions = {
       check: (value, isRequired, dType, depth, contract) => {
         if ("function" === typeof isRequired) isRequired = isRequired(value, contract, dType, depth)
 
-        if (!isRequired) {
-          return (undefined === value || null === value || 0 === value.length)
-        } else {
-          switch (dType) {
-            case "String":
-              return ("string" === typeof value && 0 < value.length)
-            case "Number":
-              return "number" === typeof value
-            case "Boolean":
-              return "boolean" === typeof value
-            case "Generic":
-              return undefined !== value && null !== value
-            case "Array":
-              return ("object" === typeof value && 0 < value.length)
-            default:
-              return false // should not be reachable unless invalid dType provided
-          }
+        if (!isRequired) return true
+
+        switch (dType) {
+          case "String":
+            return ("string" === typeof value && 0 < value.length)
+          case "Number":
+            return "number" === typeof value
+          case "Boolean":
+            return "boolean" === typeof value
+          case "Generic":
+            return undefined !== value && null !== value
+          case "Array":
+            return ("object" === typeof value && 0 < value.length)
+          default:
+            return false // should not be reachable unless invalid dType provided
         }
       },
       message: (value, isRequired, dType, depth, contract) => {
-        if ("function" === typeof isRequired) isRequired = isRequired(value, contract, dType, depth)
+        return "not present"
       },
       i18next: (value, isRequired, dType, depth, contract, i18n) => {
-        if ("function" === typeof isRequired) isRequired = isRequired(value, contract, dType, depth)
-        return isRequired ? i18n.t("errors:presence.true") : i18n.t("errors:presence.false")
+        return i18n.t("errors:presence")
+      },
+    },
+
+    absence: {
+      check: (value, mustBeAbsent, dType, depth, contract) => {
+        if ("function" === typeof mustBeAbsent) mustBeAbsent = mustBeAbsent(value, contract, dType, depth)
+
+        if (!mustBeAbsent) return true
+
+        return (undefined === value || null === value || 0 === value.length)
+      },
+      message: (value, isRequired, dType, depth, contract) => {
+        return "must be absent"
+      },
+      i18next: (value, isRequired, dType, depth, contract, i18n) => {
+        return i18n.t("errors:absence")
       },
     },
 

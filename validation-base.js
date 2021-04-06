@@ -88,7 +88,7 @@ export const validateProperty = function(depth, propertyConfiguration) {
     for (let validationName of validations) {
       if(undefined !== _validations.normal[validationName]) {
         if (!_validations.normal[validationName].check(propValue, propertyConfiguration[validationName], dType, depth, this)) {
-          errors.push(
+          let errorMessage =
             this._getErrorMessageFor(
               propValue,
               propertyConfiguration,
@@ -97,7 +97,8 @@ export const validateProperty = function(depth, propertyConfiguration) {
               "normal",
               validationName
             )
-          )
+
+          if (errorMessage) errors.push(errorMessage)
           this.isValidState = false
         }
         usedNormalValidations.push(validationName)
