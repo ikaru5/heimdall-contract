@@ -31,6 +31,13 @@ export const validateArray = function(depth, propertyConfiguration, key) {
     return true
   } else { // must be a contract, but may fail if nonsense provided
     for (let index = 0; index < elements.length; index++) {
+      // if not a function -> not a contract -> try creating a nested contract
+      if ("function" !== typeof elements[index]._parseParent) {
+        const nestedContract = this._defaultEmptyValueFor("Contract", propertyConfiguration.arrayOf)
+        nestedContract._parseParent(this)
+        nestedContract.assign(elements[index])
+        elements[index] = nestedContract
+      }
       elements[index]._parseParent(this)
       if (!elements[index].isValid()) this.isValidState = false
       this.setValueAtPath(["errors"].concat(depth).concat(key).concat(index), elements[index].errors)
@@ -50,16 +57,16 @@ export const validateProperty = function(depth, propertyConfiguration) {
   let validations = Object.keys(propertyConfiguration).filter(f => !this.contractConfig._nonValidationConfigs.includes(f))
   if (validations.length < 1) return
   // get the value and the dType
-  let propValue = this.getValueAtPath(depth)
-  let dType = propertyConfiguration.dType
+  const propValue = this.getValueAtPath(depth)
+  const dType = propertyConfiguration.dType
   // remove old errors
   this.setValueAtPath(["errors"].concat(depth), undefined)
-  let errors = []
+  const errors = []
 
   // 1. STEP: check validation breakers like "allowBlank"
   let usedBreakers = []
-  for (let breakerName of validations) {
-    if(undefined !== _validations.breaker[breakerName]) {
+  for (const breakerName of validations) {
+    if (undefined !== _validations.breaker[breakerName]) {
       if (_validations.breaker[breakerName].check(propValue, propertyConfiguration[breakerName], dType, depth, this)) {
         return true // if one of the breakers return true, the field is valid
       }
@@ -67,7 +74,7 @@ export const validateProperty = function(depth, propertyConfiguration) {
     }
     // custom breaker
     if ("validateIf" === breakerName) {
-      if (propertyConfiguration[breakerName](propValue, this, dType, depth)) return true
+      if (!propertyConfiguration[breakerName](propValue, this, dType, depth)) return true
       usedBreakers.push(breakerName)
     }
   }
@@ -78,17 +85,17 @@ export const validateProperty = function(depth, propertyConfiguration) {
   let usedNormalValidations = []
 
   // contracts should not have normal validations
-  if ("Contract" == dType) {
-    let nestedContract = this.getValueAtPath(depth)
+  if ("Contract" === dType) {
+    const nestedContract = this.getValueAtPath(depth)
     nestedContract._parseParent(this)
     if (!nestedContract.isValid()) this.isValidState = false
     this.setValueAtPath(["errors"].concat(depth), nestedContract.errors)
     usedNormalValidations.push("dType")
   } else {
-    for (let validationName of validations) {
+    for (const validationName of validations) {
       if(undefined !== _validations.normal[validationName]) {
         if (!_validations.normal[validationName].check(propValue, propertyConfiguration[validationName], dType, depth, this)) {
-          let errorMessage =
+          const errorMessage =
             this._getErrorMessageFor(
               propValue,
               propertyConfiguration,

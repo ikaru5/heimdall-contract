@@ -87,15 +87,16 @@ export default class Index {
    * @param _currentScope - private - used for recursion
    */
   assign(inputObject, _depth = [], _parsedDepth = [], _currentScope = this.schema) {
+    // skip empty assignment
     if ("" === inputObject || undefined === inputObject) {
-      this.isAssignedEmpty = true
+      this.isAssignedEmpty = true // some validations may need it
       return
     }
 
     for (let key of Object.keys(_currentScope)) {
-      let value = _currentScope[key]
-      let inputValueKey = value.parseAs || value.as || key
-      let inputValue = this.getValueAtPath(_parsedDepth.concat(inputValueKey), inputObject)
+      const value = _currentScope[key]
+      const inputValueKey = value.parseAs || value.as || key
+      const inputValue = this.getValueAtPath(_parsedDepth.concat(inputValueKey), inputObject)
       if (undefined === inputValue) continue
 
       if (undefined !== value.dType) {
@@ -106,7 +107,7 @@ export default class Index {
               if ("string" === typeof value.arrayOf) {
                 this.setValueAtPath(_depth.concat(key).concat(index), inputValue[index] || this._defaultEmptyValueFor(value.arrayOf))
               } else {  // must be a contract, but may fail if nonsense provided
-                let nestedContract = this._defaultEmptyValueFor("Contract", value.arrayOf)
+                const nestedContract = this._defaultEmptyValueFor("Contract", value.arrayOf)
                 nestedContract._parseParent(this)
                 nestedContract.assign(inputValue[index])
                 this.setValueAtPath(_depth.concat(key).concat(index), nestedContract)
@@ -150,37 +151,46 @@ export default class Index {
   }
 
   /**
-   * Returns clean hash object with filled data for sending, according to contract schema.
+   * Returns clean Object object with filled data for sending, according to contract schema.
    * Not safe if not validated before!
    * @param _depth
    * @param _currentScope
    * @returns {{}}
    */
-  toHash(_depth = [], _currentScope = this.schema) {
-    let out = {}
-    for (let key of Object.keys(_currentScope)) {
-      let value = _currentScope[key]
-      let renderKey = value.renderAs || value.as || key
+  toObject(_depth = [], _currentScope = this.schema) {
+    const out = {}
+    for (const key of Object.keys(_currentScope)) {
+      const value = _currentScope[key]
+      const renderKey = value.renderAs || value.as || key
 
       if (undefined !== value.dType) {
         switch (value.dType) {
           case "Array":
+            const valueAtPath = this.getValueAtPath(_depth.concat(key))
+            if (!Array.isArray(valueAtPath)) break // do nothing if empty
             out[renderKey] = this.getValueAtPath(_depth.concat(key)).map((element) => {
               if ("string" === typeof value.arrayOf) {
+                // if Array consists of basic types, we can simply return the value
                 return element
               } else {
-                return element.toHash()
+                // otherwise this is must be nested contract
+                if (element.toObject) return element.toObject()
+                // if elements were assigned directly no new nested contract was created, do it here!
+                const nestedContract = this._defaultEmptyValueFor("Contract", value.arrayOf)
+                nestedContract._parseParent(this)
+                nestedContract.assign(element)
+                return nestedContract.toObject()
               }
             })
             break
           case "Contract":
-            out[renderKey] = this.getValueAtPath(_depth.concat(key)).toHash()
+            out[renderKey] = this.getValueAtPath(_depth.concat(key)).toObject()
             break
           default:
             out[renderKey] = this.getValueAtPath(_depth.concat(key))
         }
       } else {
-        out[renderKey] = this.toHash(_depth.concat(key), value)
+        out[renderKey] = this.toObject(_depth.concat(key), value)
       }
     }
     return out
@@ -200,8 +210,8 @@ export default class Index {
    * @private
    */
   _define(schema, depth) {
-    for (let key of Object.keys(schema)) {
-      let value = schema[key]
+    for (const key of Object.keys(schema)) {
+      const value = schema[key]
       if (undefined !== value["dType"]) {
         this._defineProperty(depth.concat(key), value)
       } else {
@@ -217,29 +227,19 @@ export default class Index {
    * @private
    */
   _defineProperty(depth, config) {
-    switch (config.dType) {
-      case "String":
-        this.setValueAtPath(depth, config["default"] || this._defaultEmptyValueFor(config.dType))
-        break
-      case "Number":
-        this.setValueAtPath(depth, config["default"] || this._defaultEmptyValueFor(config.dType))
-        break
-      case "Boolean":
-        this.setValueAtPath(depth, config["default"] || this._defaultEmptyValueFor(config.dType))
-        break
-      case "Generic":
-        this.setValueAtPath(depth, config["default"] || this._defaultEmptyValueFor(config.dType))
-        break
-      case "Array":
-        this.setValueAtPath(depth, config["default"] || this._defaultEmptyValueFor(config.dType))
-        break
-      case "Contract":
-        this.setValueAtPath(depth, this._defaultEmptyValueFor(config.dType, config.contract))
-        break
-      default:
-        console.warn("Wrong dType: " + config.dType + " for: " + depth + ". Assuming Generic dType.")
-        this.setValueAtPath(depth, config["default"] || this._defaultEmptyValueFor(config.dType))
+    if ("Contract" === config.dType) {
+      this.setValueAtPath(depth, this._defaultEmptyValueFor(config.dType, config.contract))
+    } else {
+      const isValidDataType = ["String", "Number", "Boolean", "Generic", "Array", "Contract"].includes(config.dType)
+      if (!isValidDataType) console.warn("Wrong dType: " + config.dType + " for: " + depth + ". Assuming Generic dType.")
+
+      const targetValue = undefined === config["default"] ?
+        this._defaultEmptyValueFor(isValidDataType ? config.dType : "Generic") :
+        config["default"]
+
+      this.setValueAtPath(depth, targetValue)
     }
+
     this.setValueAtPath(["errors"].concat(depth), undefined)
   }
 
@@ -250,7 +250,7 @@ export default class Index {
    * @returns {*[]|string|*|null|[]|string|undefined}
    * @private
    */
-  _defaultEmptyValueFor(dType, contract) {
+  _defaultEmptyValueFor(dType, contract = undefined) {
     switch (dType) {
       case "String":
         return ""
@@ -272,18 +272,22 @@ export default class Index {
         newContract._parseParent(this)
         return newContract
       default:
-        return this._defaultEmptyValueFor("Generic", undefined)
+        return this._defaultEmptyValueFor("Generic")
     }
   }
 
   /**
    * Method will be run by nested Contracts on creation, assignment and validation.
    * Following tasks are implemented:
+   *   * Inherit localizationMethod
    *   * Inherit params.all Object.
    * @param parent Parent contract instance
    * @private
    */
   _parseParent(parent) {
+    this.contractConfig.localizationMethod = parent.contractConfig.localizationMethod
+    this.contractConfig.i18next = parent.contractConfig.i18next
+
     // parse params
     if (undefined !== parent.contractConfig.params.all) {
       this.contractConfig.params["all"] = {

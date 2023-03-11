@@ -85,7 +85,7 @@ const validationDefinitions = {
         return "not present"
       },
       i18next: (value, isRequired, dType, depth, contract, i18n) => {
-        return i18n.t("errors:presence")
+        return i18n.t(["errors:presence.true", "errors:presence"])
       },
     },
 
@@ -101,7 +101,7 @@ const validationDefinitions = {
         return "must be absent"
       },
       i18next: (value, isRequired, dType, depth, contract, i18n) => {
-        return i18n.t("errors:absence")
+        return i18n.t(["errors:presence.false", "errors:absence.true", "errors:absence"])
       },
     },
 
@@ -119,6 +119,20 @@ const validationDefinitions = {
       i18next: (value, mustBeEmail, dType, depth, contract, i18n) => {
         if ("function" === typeof mustBeEmail) mustBeEmail = mustBeEmail(value, contract, dType, depth)
         return mustBeEmail ? i18n.t("errors:isEmail.true") : i18n.t("errors:isEmail.false")
+      },
+    },
+
+    match: {
+      check: (value, regex, dType, depth, contract) => {
+        if ("function" === typeof regex) regex = regex(value, contract, dType, depth)
+
+        return regex.test(value)
+      },
+      message: (value, regex, dType, depth, contract) => {
+        return "invalid"
+      },
+      i18next: (value, mustBeEmail, dType, depth, contract, i18n) => {
+        return i18n.t("errors:generic")
       },
     },
 
