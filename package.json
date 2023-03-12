@@ -1,6 +1,6 @@
 {
   "name": "@ikaru5/heimdall-contract",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "description": "Validation and Representer Objects in your Frontend",
   "license": "MIT",
   "repository": "ikaru5/heimdall-contract",
@@ -17,6 +17,9 @@
     "jest": "^29.5.0"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest --coverage"
+  },
+  "dependencies": {
+    "@jest/globals": "^29.5.0"
   }
 }

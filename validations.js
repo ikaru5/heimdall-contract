@@ -30,6 +30,29 @@ const validationDefinitions = {
 
         return (undefined === value || null === value || 0 === value.length || true === value.isAssignedEmpty)
       },
+    },
+    // validate only if validation context matches
+    // if context matches, no outbreak -> return false
+    on: {
+      check: (value, contextOfProperty, dType, depth, contract) => {
+        const checkSingleContext = (context) => {
+          if (context === contextOfProperty) return false
+          if (context === "matchAnyContext") return false
+          return !(Array.isArray(contextOfProperty) && contextOfProperty.includes(context));
+        }
+
+        // if multiple contexts are provided, check if any of them matches
+        if (Array.isArray(contract._validationContext)) {
+          for (const context of contract._validationContext) {
+            if (!checkSingleContext(context)) return false
+          }
+        } else {
+          // reuse checkSingleContext function for single context :D
+          return checkSingleContext(contract._validationContext)
+        }
+
+        return true // if no context matches, outbreak
+      },
     }
   },
 
@@ -49,14 +72,15 @@ const validationDefinitions = {
           case "Array":
             return "object" === typeof value && "number" === typeof value.length
           default:
+            console.error("Invalid dType provided: " + dataType)
             return false // should not be reachable unless invalid dType provided
         }
       },
       message: (value, dataType, dType, depth, contract) => {
-        return value + " is not a valid " + dataType
+        return `"${value}" is not a valid ${dataType}`
       },
       i18next: (value, dataType, dType, depth, contract, i18n) => {
-        return  i18n.t(["errors:dType." + dType, "errors:dType.default"], {value: value, dType: dType})
+        return i18n.t([`errors:dType.${dType}`, "errors:dType.default"], {value: value, dType: dType})
       },
     },
 
@@ -109,7 +133,7 @@ const validationDefinitions = {
       check: (value, mustBeEmail, dType, depth, contract) => {
         if ("function" === typeof mustBeEmail) mustBeEmail = mustBeEmail(value, contract, dType, depth)
 
-        let isEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(value)
+        const isEmail = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value)
         return mustBeEmail ? isEmail : !isEmail
       },
       message: (value, mustBeEmail, dType, depth, contract) => {
@@ -136,51 +160,125 @@ const validationDefinitions = {
       },
     },
 
+    // intuitive only validation:
+    // - magical array handling: if value is an array, it is valid if value is included in the allowedValues array
     only: {
       check: (value, allowedValues, dType, depth, contract) => {
         if ("function" === typeof allowedValues) allowedValues = allowedValues(value, contract, dType, depth)
 
-        return "object" === typeof allowedValues ? allowedValues.includes(value) : allowedValues === value
+        const isValueEmpty = undefined === value || null === value || 0 === value?.length
+        if (isValueEmpty) return true
+
+        if (Array.isArray(allowedValues)) {
+          return Array.isArray(value) ? value.every(v => allowedValues.includes(v)) : allowedValues.includes(value)
+        } else {
+          return allowedValues === value
+        }
       },
       message: (value, allowedValues, dType, depth, contract) => {
         if ("function" === typeof allowedValues) allowedValues = allowedValues(value, contract, dType, depth)
-        if ("object" === typeof allowedValues && allowedValues.length < 2) allowedValues = allowedValues[0]
-        if ("object" === typeof allowedValues) {
-          return "must be " + allowedValues.slice(0,-1).join(",") + " or " + allowedValues[allowedValues.length]
+        if (Array.isArray(allowedValues) && allowedValues.length < 2) allowedValues = allowedValues[0]
+        if (Array.isArray(allowedValues)) {
+          return `must be "${allowedValues.slice(0, -1).join(",")}" or "${allowedValues[allowedValues.length - 1]}"`
         } else {
-          return "must be " + allowedValues
+          return `must be "${allowedValues}"`
         }
       },
       i18next: (value, allowedValues, dType, depth, contract, i18n) => {
         if ("function" === typeof allowedValues) allowedValues = allowedValues(value, contract, dType, depth)
         if ("object" === typeof allowedValues && allowedValues.length < 2) allowedValues = allowedValues[0]
         if ("object" === typeof allowedValues) {
-          return i18n.t("errors:only.plural", { elements: allowedValues.slice(0,-1).join(","), lastElement: allowedValues[allowedValues.length] })
+          return i18n.t("errors:only.plural", {elements: allowedValues.slice(0, -1).join(","), lastElement: allowedValues[allowedValues.length - 1]})
         } else {
-          return i18n.t("errors:only.singular", { element: allowedValues })
+          return i18n.t("errors:only.singular", {element: allowedValues})
         }
       },
     },
+
+    strictOnly: {
+      check: (value, allowedValues, dType, depth, contract) => {
+        if ("function" === typeof allowedValues) allowedValues = allowedValues(value, contract, dType, depth)
+
+        const isValueEmpty = undefined === value || null === value || 0 === value?.length
+        if (isValueEmpty) return true
+
+        if (Array.isArray(allowedValues)) {
+          return ["Array", "Generic"].includes(dType) ?
+            JSON.stringify(value) === JSON.stringify(allowedValues) :
+            allowedValues.includes(value)
+        }
+
+        return allowedValues === value
+      },
+      message: (value, allowedValues, dType, depth, contract) => {
+        if ("function" === typeof allowedValues) allowedValues = allowedValues(value, contract, dType, depth)
+
+        if (Array.isArray(allowedValues) && allowedValues.length < 2 && !["Array", "Generic"].includes(dType)) allowedValues = allowedValues[0]
+        if (Array.isArray(allowedValues) && !["Array", "Generic"].includes(dType)) {
+          return `must be "${allowedValues.slice(0, -1).join(",")}" or "${allowedValues[allowedValues.length - 1]}"`
+        } else {
+          return `must be "${allowedValues}"`
+        }
+      },
+      i18next: (value, allowedValues, dType, depth, contract, i18n) => {
+        if ("function" === typeof allowedValues) allowedValues = allowedValues(value, contract, dType, depth)
+
+        if (Array.isArray(allowedValues) && allowedValues.length < 2 && !["Array", "Generic"].includes(dType)) allowedValues = allowedValues[0]
+        if (Array.isArray(allowedValues) && !["Array", "Generic"].includes(dType)) {
+          return i18n.t("errors:strictOnly.plural", {elements: allowedValues.slice(0, -1).join(","), lastElement: allowedValues[allowedValues.length - 1]})
+        } else {
+          return i18n.t("errors:strictOnly.singular", {element: allowedValues})
+        }
+      },
+    },
+
 
     min: {
       check: (value, minCount, dType, depth, contract) => {
         if ("function" === typeof minCount) minCount = minCount(value, contract, dType, depth)
 
-        if ("String" === dType || "Array" === dType) return value.length >= minCount
-        if ("Number" === dType) return value >= minCount
-        console.error("Invalid dType: " + dType + " for minimum validation on field '" + depth + "'")
+        const isComparableString = "String" === dType && "string" === typeof value
+        const isComparableArray = "Array" === dType && Array.isArray(value)
+        if (isComparableString || isComparableArray) return value.length >= minCount
+
+        if ("Number" === dType && "number" === typeof value) return value >= minCount
+
+        console.error(`Invalid dType: ${dType} for minimum validation on field '${depth}'`)
         return true
       },
       message: (value, minCount, dType, depth, contract) => {
         if ("function" === typeof minCount) minCount = minCount(value, contract, dType, depth)
-        if ("String" === dType) return "must have at least " + minCount + " characters"
-        if ("Array" === dType) return "must have at least " + minCount + " elements"
-        if ("Number" === dType) return "must have be greater than " + (minCount - 1)
+        if ("String" === dType) return `must have at least ${minCount} characters`
+        if ("Array" === dType) return `must have at least ${minCount} elements`
+        if ("Number" === dType) return `must be greater than or equal to ${minCount}`
       },
       i18next: (value, minCount, dType, depth, contract, i18n) => {
         if ("function" === typeof minCount) minCount = minCount(value, contract, dType, depth)
-        if ("Number" === dType) minCount -= 1
-        return i18n.t("errors:min." + dType, { minCount: minCount })
+        return i18n.t("errors:min." + dType, {minCount})
+      },
+    },
+
+    max: {
+      check: (value, maxCount, dType, depth, contract) => {
+        if ("function" === typeof maxCount) maxCount = maxCount(value, contract, dType, depth)
+
+        const isComparableString = "String" === dType && "string" === typeof value
+        const isComparableArray = "Array" === dType && Array.isArray(value)
+        if (isComparableString || isComparableArray) return value.length <= maxCount
+
+        if ("Number" === dType && "number" === typeof value) return value <= maxCount
+        console.error(`Invalid dType: ${dType} for maximum validation on field '${depth}'`)
+        return true
+      },
+      message: (value, maxCount, dType, depth, contract) => {
+        if ("function" === typeof maxCount) maxCount = maxCount(value, contract, dType, depth)
+        if ("String" === dType) return `must have less than ${maxCount} characters`
+        if ("Array" === dType) return `must have less than ${maxCount} elements`
+        if ("Number" === dType) return `must be lower or equal than ${maxCount}`
+      },
+      i18next: (value, maxCount, dType, depth, contract, i18n) => {
+        if ("function" === typeof maxCount) maxCount = maxCount(value, contract, dType, depth)
+        return i18n.t("errors:max." + dType, {maxCount})
       },
     },
   }

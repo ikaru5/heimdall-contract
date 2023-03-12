@@ -1,4 +1,4 @@
-import { validate, validateArray, validateProperty, getErrorMessageFor, getGenericErrorMessage } from "./validation-base.js";
+import {getErrorMessageFor, getGenericErrorMessage, validate, validateArray, validateProperty} from "./validation-base.js";
 
 /**
  * Provides a class based value holder.
@@ -13,8 +13,8 @@ export default class Index {
   //  Constructor and Init
   // -----------------------------------------------------------------------------------------------
 
-  constructor(options) {
-    // outsourced validation logic
+  constructor(options = undefined) {
+    // validation logic bound to the contract instance
     this._validate = validate.bind(this)
     this._validateArray = validateArray.bind(this)
     this._validateProperty = validateProperty.bind(this)
@@ -24,7 +24,6 @@ export default class Index {
     this.contractConfig = {
       i18next: undefined,
       localizationMethod: "Internal",
-      params: {},
       _nonValidationConfigs: [
         "default", "errorMessage", "arrayOf", "innerValidate", "contract", "as", "parseAs", "renderAs"
       ]
@@ -35,6 +34,7 @@ export default class Index {
     } else {
       this.schema = this.defineSchema()
     }
+    this.errors = {}
     this.init()
     if ("function" === typeof options?.initNested) {
       this.initNested = options.initNested.bind(this)
@@ -61,9 +61,11 @@ export default class Index {
   /**
    * Hook method
    */
-  init() {}
+  init() {
+  }
 
-  setConfig() {}
+  setConfig() {
+  }
 
   // -----------------------------------------------------------------------------------------------
   //  Public API
@@ -71,10 +73,13 @@ export default class Index {
 
   /**
    * Is contract valid?
+   * @param context
    * @returns {boolean}
    */
-  isValid() {
+  isValid(context = undefined) {
     this.isValidState = true // if an error occurs it will set it to false during _validate execution.
+    this.errors = {}
+    this._validationContext = context
     this._validate()
     return this.isValidState
   }
@@ -104,7 +109,7 @@ export default class Index {
           case "Array":
             for (let index = 0; index < inputValue.length; index++) {
               if (undefined === value.arrayOf) console.error("Type of array must be defined in arrayOf: " + _depth.concat(key).join("."))
-              if ("string" === typeof value.arrayOf) {
+              if (undefined === value.arrayOf || "string" === typeof value.arrayOf) {
                 this.setValueAtPath(_depth.concat(key).concat(index), inputValue[index] || this._defaultEmptyValueFor(value.arrayOf))
               } else {  // must be a contract, but may fail if nonsense provided
                 const nestedContract = this._defaultEmptyValueFor("Contract", value.arrayOf)
@@ -137,7 +142,7 @@ export default class Index {
    * @param object - default: this - object to assign nested value
    */
   setValueAtPath(depth, value, object = this) {
-    depth.reduce((o,p,i) => o[p] = depth.length === ++i ? value : o[p] || {}, object)
+    depth.reduce((o, p, i) => o[p] = depth.length === ++i ? value : o[p] || {}, object)
   }
 
   /**
@@ -167,9 +172,8 @@ export default class Index {
         switch (value.dType) {
           case "Array":
             const valueAtPath = this.getValueAtPath(_depth.concat(key))
-            if (!Array.isArray(valueAtPath)) break // do nothing if empty
-            out[renderKey] = this.getValueAtPath(_depth.concat(key)).map((element) => {
-              if ("string" === typeof value.arrayOf) {
+            out[renderKey] = valueAtPath?.map((element) => {
+              if (undefined === value.arrayOf || "string" === typeof value.arrayOf) {
                 // if Array consists of basic types, we can simply return the value
                 return element
               } else {
@@ -234,13 +238,11 @@ export default class Index {
       if (!isValidDataType) console.warn("Wrong dType: " + config.dType + " for: " + depth + ". Assuming Generic dType.")
 
       const targetValue = undefined === config["default"] ?
-        this._defaultEmptyValueFor(isValidDataType ? config.dType : "Generic") :
+        this._defaultEmptyValueFor(config.dType) :
         config["default"]
 
       this.setValueAtPath(depth, targetValue)
     }
-
-    this.setValueAtPath(["errors"].concat(depth), undefined)
   }
 
   /**
@@ -265,36 +267,27 @@ export default class Index {
       case "Contract":
         let newContract = undefined
         if ("function" === typeof contract) {
-          newContract = new contract({ initNested: this.initNested, initAll: this.initAll })
+          newContract = new contract({initNested: this.initNested, initAll: this.initAll})
         } else {
-          newContract = new Index({ schema: contract, initNested: this.initNested, initAll: this.initAll })
+          newContract = new Index({schema: contract, initNested: this.initNested, initAll: this.initAll})
         }
         newContract._parseParent(this)
         return newContract
-      default:
-        return this._defaultEmptyValueFor("Generic")
     }
+
+    return this._defaultEmptyValueFor("Generic")
   }
 
   /**
    * Method will be run by nested Contracts on creation, assignment and validation.
    * Following tasks are implemented:
    *   * Inherit localizationMethod
-   *   * Inherit params.all Object.
    * @param parent Parent contract instance
    * @private
    */
   _parseParent(parent) {
     this.contractConfig.localizationMethod = parent.contractConfig.localizationMethod
     this.contractConfig.i18next = parent.contractConfig.i18next
-
-    // parse params
-    if (undefined !== parent.contractConfig.params.all) {
-      this.contractConfig.params["all"] = {
-        ...parent.contractConfig.params.all,
-        ...this.contractConfig.params["all"]
-      }
-    }
   }
 
 }

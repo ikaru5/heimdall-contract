@@ -1,7 +1,7 @@
 # Heimdall Contract (WIP)
 
 Validation Objects in your Frontend
-Target is to create Contracts like in Ruby Trailblazer for your JS-Frontend like React, Vue or similar.
+Target is to create Contracts (Reform) like Ruby Trailblazer for your JS-Frontend like React, Vue or any other JS project.
 
 This is still in development... More to come!
 
@@ -17,22 +17,23 @@ class SignupContract extends ContractBase {
       {
         ...super.defineSchema(), // optional: used for inheritance ;)
         ...{
-          name: { dType: "String", presence: true },
-          agb: { dType: "Boolean" , default: false, only: true },
-          email: { dType: "String", presence: true, isEmail: true },
-          username: { dType: "String", presence: true, min: 8 },
-          password: { dType: "String", presence: true, min: 8 },
+          name: {dType: "String", presence: true},
+          agb: {dType: "Boolean", default: false, only: true},
+          email: {dType: "String", presence: true, isEmail: true},
+          username: {dType: "String", presence: true, min: 8},
+          password: {dType: "String", presence: true, min: 8},
           passwordRepeat: {
             dType: "String", presence: true,
             validate: (value, contract) => {
-              return value === contract.password ? true : false
+              return value === contract.password ? true : false // for custom error message return string instead of false. 
+              // custom validation translation is not implemented yet, so you have to return the error message in the language you want to display it
             }
           },
           address: {
-            street: { dType: "String", presence: true },
-            streetNumber: { dType: "Number", presence: true },
-            plz: { dType: "String", presence: true },
-            city: { dType: "String", presence: true },
+            street: {dType: "String", presence: true},
+            streetNumber: {dType: "Number", presence: true},
+            plz: {dType: "String", presence: true},
+            city: {dType: "String", presence: true},
           }
         }
       }
@@ -63,8 +64,8 @@ console.log(
 )
 ```
 
-If the data is coming as JSON or as an nested Object 
-from your API or State Management System for example, 
+If the data is coming as JSON or as an nested Object
+from your API or State Management System for example,
 you can assign it like that:
 
 ```Javascript
@@ -80,11 +81,66 @@ console.log(
 )
 ```
 
+# Validation Context
+
+It is possible to do validations only if a specific context is set.
+It is a quality o life feature and could also be implemented through validateIf.
+
+```Javascript
+class SubContextContract extends ContractBase {
+
+  defineSchema() {
+    return (
+      {
+        ...super.defineSchema(),
+        ...{
+          numberWithoutContext: {dType: "Number", min: 10},
+          number: {dType: "Boolean", only: true, on: "contextA"}
+        }
+      }
+    )
+  }
+
+}
+
+class ContextContract extends ContractBase {
+  defineSchema() {
+    return (
+      {
+        ...super.defineSchema(),
+        ...{
+          numberWithoutContext: {dType: "Number", min: 10},
+          number: {dType: "Number", min: 10, on: "contextA"},
+          string: {dType: "String", match: /^[a-zA-Z0-9\s]*$/, on: ["contextA", "contextB"]},
+          addressSimple: {
+            plz: {presence: true, dType: "String", on: "contextA"}
+          },
+          sub: {dType: "Contract", contract: SubContextContract, allowBlank: false, on: "contextB"},
+          addressesContracted: {dType: "Array", min: 2, arrayOf: SubContextContract, allowBlank: false, on: "contextB"}, // this context will skip only outer validations like "min: 2" in this example
+          subsContractedWithInner: {dType: "Array", min: 3, arrayOf: SubContextContract, allowBlank: false, on: "contextB", innerValidate: {on: "contextB"}} // use innerValidate to skip validations of nested contract
+        }
+      }
+    )
+  }
+}
+```
+
+As you can see, every attribute can have one or more contexts through `on` attribute.
+The context will also be passed to the nested contracts.
+
+```Javascript
+const contextContract = new ContextContract()
+contextContract.assign(data)
+contextContract.isValid("contextA") // context will be set to contextA
+contextContract.isValid(["contextA", "contextB"]) // use multiple contexts
+contextContract.isValid() // context = undefined
+contextContract.isValid("matchAnyContext") // magic context to match all contexts
+```
+
 ## Development
 
-- [ ] add more tests
-- [ ] add new dType: "StringNumber" for stringed numbers
-- [ ] make dType validation skipable
+- [ ] add example for i18next
+- [ ] validation modes: validate all (default), stop on first error, stop on first error per attribute
 - [ ] write README :D
 
 ## Contributing
@@ -97,7 +153,7 @@ console.log(
 
 ## Contributors and Contact
 
-If you have ideas on how to develop heimdall more or what features it is missing, I would love to hear about it!
+If you have ideas on how to develop heimdall or what features it is missing, I would love to hear about it!
 
 - [@ikaru5](https://github.com/ikaru5) Kirill Kulikov - creator, maintainer
 
@@ -105,4 +161,4 @@ If you have ideas on how to develop heimdall more or what features it is missing
 
 Copyright (c) 2020 Kirill Kulikov <k.kulikov94@gmail.com>
 
-`heimdall-constract` is released under the [MIT License](http://www.opensource.org/licenses/MIT).
+`heimdall-contract` is released under the [MIT License](http://www.opensource.org/licenses/MIT).
