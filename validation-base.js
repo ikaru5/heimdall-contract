@@ -1,5 +1,3 @@
-import _validations from "./validations.js"
-
 /**
  * Iterate recursively over the schema and calls _validateProperty to validate the elements.
  * Note: all functions are exported and bound to the contract instance. The bound version is private (starts with _). Always use the bound version!
@@ -115,8 +113,8 @@ export const validateProperty = function (depth, propertyConfiguration) {
     usedNormalValidations.push("dType")
   } else {
     for (const validationName of validations) { // iterate over all validations
-      if (undefined !== _validations.normal[validationName]) { // check if validation is defined
-        if (!_validations.normal[validationName].check(propValue, propertyConfiguration[validationName], dType, depth, this)) { // validate -> validation returns true if valid
+      if (undefined !== this._validations.normal[validationName]) { // check if validation is defined
+        if (!this._validations.normal[validationName].check(propValue, propertyConfiguration[validationName], dType, depth, this)) { // validate -> validation returns true if valid
           const errorMessage = this._getErrorMessageFor(propValue, propertyConfiguration, dType, depth, "normal", validationName)
           errors.push(errorMessage)
           this.isValidState = false
@@ -156,8 +154,8 @@ export const validateProperty = function (depth, propertyConfiguration) {
 const checkBreakers = (instance, validations, propValue, propertyConfiguration, dType, depth) => {
   const usedBreakers = []
   for (const breakerName of validations) {
-    if (undefined !== _validations.breaker[breakerName]) {
-      if (_validations.breaker[breakerName].check(propValue, propertyConfiguration[breakerName], dType, depth, instance)) {
+    if (undefined !== instance._validations.breaker[breakerName]) {
+      if (instance._validations.breaker[breakerName].check(propValue, propertyConfiguration[breakerName], dType, depth, instance)) {
         return {outbreaksValidations: true} // if one of the breakers return true, the field is valid
       }
       usedBreakers.push(breakerName)
@@ -187,9 +185,9 @@ export const getErrorMessageFor = function (propertyValue, propertyConfiguration
 
   switch (this.contractConfig.localizationMethod) {
     case "i18next":
-      return _validations[validationScope][validationName].i18next(propertyValue, propertyConfiguration[validationName], dType, depth, this, this.contractConfig.i18next)
+      return this._validations[validationScope][validationName].i18next(propertyValue, propertyConfiguration[validationName], dType, depth, this, this.contractConfig.i18next)
     default:
-      return _validations[validationScope][validationName].message(propertyValue, propertyConfiguration[validationName], dType, depth, this)
+      return this._validations[validationScope][validationName].message(propertyValue, propertyConfiguration[validationName], dType, depth, this)
   }
 }
 

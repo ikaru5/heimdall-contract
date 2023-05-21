@@ -18,7 +18,7 @@
  *   @param depth - optional, hopefully never needed
  *   @param contractInstance - optional, hopefully never needed
  */
-const validationDefinitions = {
+export const validationDefinitions = {
   // if these validations passes, normal validations will be skipped
   breaker: {
     // Allow Blank or empty values
@@ -283,5 +283,3 @@ const validationDefinitions = {
     },
   }
 }
-
-export default validationDefinitions

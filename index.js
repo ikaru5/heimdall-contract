@@ -1,18 +1,30 @@
 import {getErrorMessageFor, getGenericErrorMessage, validate, validateArray, validateProperty} from "./validation-base.js";
+import { validationDefinitions as baseValidationDefinitions } from "./validations.js"
+
+/**
+ * @typedef Options
+ * @property {object} [schema] - set schema through constructor for little inline contracts for example
+ * @property {function} [initNested] - passed hook for internal use only; will be called after own init
+ * @property {function} [initAll] - passed hook for internal use only; will be called after own initNested
+ */
 
 /**
  * Provides a class based value holder.
  * Supports nested values.
  * !!!ATTENTION!!! 'dType' not allowed as name for a property !!!
  * dType is required and indicates what datatype is used.
- * dType can be "String", "Number", "Boolean", "Array", "Contract" or "Generic" (Generic means it doesnt matter)
+ * dType can be "String", "Number", "Boolean", "Array", "Contract" or "Generic" (Generic means it doesn't matter)
  */
-export default class Index {
+export default class Contract {
 
   // -----------------------------------------------------------------------------------------------
   //  Constructor and Init
   // -----------------------------------------------------------------------------------------------
 
+  /**
+   * Heimdall Contract
+   * @param {Options} options
+   */
   constructor(options = undefined) {
     // validation logic bound to the contract instance
     this._validate = validate.bind(this)
@@ -29,11 +41,16 @@ export default class Index {
       ]
     }
     this.setConfig()
+    this._additionalValidations = this.addAdditionalValidations()
+    this._setValidations()
+
+    // it is possible to set the schema in the constructor options -> small inline contracts for example
     if (options?.schema) {
       this.schema = options.schema
     } else {
       this.schema = this.defineSchema()
     }
+
     this.errors = {}
     this.init()
     if ("function" === typeof options?.initNested) {
@@ -49,13 +66,17 @@ export default class Index {
   }
 
   /**
-   * Function doesnt set the schema! It returns it, so the constructor can set it.
-   * @returns {{}}
+   * Return schema so the constructor can set it.
+   * @returns {object}
    */
   defineSchema() {
     return (
       {}
     )
+  }
+
+  addAdditionalValidations(validations = { breaker: {}, normal: {} }) {
+    return validations
   }
 
   /**
@@ -98,10 +119,14 @@ export default class Index {
       return
     }
 
-    for (let key of Object.keys(_currentScope)) {
+    for (const key of Object.keys(_currentScope)) {
       const value = _currentScope[key]
-      const inputValueKey = value.parseAs || value.as || key
-      const inputValue = this.getValueAtPath(_parsedDepth.concat(inputValueKey), inputObject)
+      const inputValueKeys = value.parseAs || value.as || key
+      // inputValueKeys can be a string or an array of strings -> if array, try to find a matching key in inputObject
+      const inputValue = Array.isArray(inputValueKeys) ?
+        this.getFirstMatchingValueAtPath(inputValueKeys.map(key => _parsedDepth.concat(key)), inputObject) :
+        this.getValueAtPath(_parsedDepth.concat(inputValueKeys), inputObject)
+
       if (undefined === inputValue) continue
 
       if (undefined !== value.dType) {
@@ -156,7 +181,21 @@ export default class Index {
   }
 
   /**
-   * Returns clean Object object with filled data for sending, according to contract schema.
+   * Helper to gather nested value from multiple paths. First found will be returned.
+   * @param {Array<String>} depths
+   * @param {Contract} object
+   * @returns {undefined|*}
+   */
+  getFirstMatchingValueAtPath(depths, object = this) {
+    for (const inputValueKey of depths) {
+      const value = this.getValueAtPath(inputValueKey, object)
+      if (undefined !== value) return value
+    }
+    return undefined
+  }
+
+  /**
+   * Returns clean Object with filled data for sending, according to contract schema.
    * Not safe if not validated before!
    * @param _depth
    * @param _currentScope
@@ -166,7 +205,8 @@ export default class Index {
     const out = {}
     for (const key of Object.keys(_currentScope)) {
       const value = _currentScope[key]
-      const renderKey = value.renderAs || value.as || key
+      const renderKeys = value.renderAs || value.as || key // for parsing "as" can be an array of keys, but for rendering it must be a single key -> take the first one
+      const renderKey = Array.isArray(renderKeys) ? renderKeys[0] : renderKeys
 
       if (undefined !== value.dType) {
         switch (value.dType) {
@@ -269,7 +309,7 @@ export default class Index {
         if ("function" === typeof contract) {
           newContract = new contract({initNested: this.initNested, initAll: this.initAll})
         } else {
-          newContract = new Index({schema: contract, initNested: this.initNested, initAll: this.initAll})
+          newContract = new Contract({schema: contract, initNested: this.initNested, initAll: this.initAll})
         }
         newContract._parseParent(this)
         return newContract
@@ -288,6 +328,39 @@ export default class Index {
   _parseParent(parent) {
     this.contractConfig.localizationMethod = parent.contractConfig.localizationMethod
     this.contractConfig.i18next = parent.contractConfig.i18next
+
+    // merge additionalValidations
+    const myBreaker = this._additionalValidations?.breaker
+    const myNormal = this._additionalValidations?.normal
+
+    const parentBreaker = parent._additionalValidations?.breaker
+    const parentNormal = parent._additionalValidations?.normal
+
+    this._additionalValidations = {
+      normal: {...parentNormal, ...myNormal},
+      breaker: {...parentBreaker, ...myBreaker}
+    }
+    this._setValidations()
+  }
+
+  /**
+   * Set validations by merging additionalValidations with base validations.
+   * @private
+   */
+  _setValidations() {
+    // merge additionalValidations with base validations
+    const myBreaker = this._additionalValidations?.breaker
+    const myNormal = this._additionalValidations?.normal
+
+    const baseBreaker = baseValidationDefinitions.breaker
+    const baseNormal = baseValidationDefinitions.normal
+
+    this._validations = {
+      normal: {...baseNormal, ...myNormal},
+      breaker: {...baseBreaker, ...myBreaker}
+    }
   }
 
 }
+
+export const ContractBase = Contract

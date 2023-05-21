@@ -1,9 +1,19 @@
-# Heimdall Contract (WIP)
+# Heimdall Contract
 
-Validation Objects in your Frontend
-Target is to create Contracts (Reform) like Ruby Trailblazer for your JS-Frontend like React, Vue or any other JS project.
+Inheritable and nestable data Objects with intuitive validation schema in your JS-Project.
+Target is to create Contracts like Rubys Trailblazer-Reform for your JS-Frontend like React, Vue or any other JS project (also backend).
 
-This is still in development... More to come!
+# Goals
+- RELIABLE: Heimdall Contracts got 100% test coverage.
+- REUSABLE: Contracts can be reused in other contracts. Thanks to validation context and inheritance you can reuse contracts with different validation rules.
+- EXTENSIBLE: You can extend the validation schema with your own validators.
+- INTUITIVE: The validation schema is intuitive and easy to understand.
+- INDEPENDENT: Heimdall Contracts are independent of any other library. It is not tied to any state management system or framework.
+- TESTABLE: Contracts are easy to test. Just take a look at the tests. ;)
+- DOCUMENTED: The documentation is written in a way that you can understand it without any prior knowledge.
+- FLEXIBLE: You can use Heimdall Contracts in any JS project. It is not tied to any framework or state management system.
+- LIGHTWEIGHT: Heimdall Contracts is lightweight. It has no dependencies and is only 3.1kb minified and gzipped.
+- TRANSLATABLE: You can use your own translation library or use the included i18next integration for error messages.
 
 ## Example
 
@@ -81,6 +91,41 @@ console.log(
 )
 ```
 
+Inherit from your base class and define your contracts! Have Fun!
+
+# Documentation
+
+- [Installation & Getting Started](doc/getting_started.md)
+- [General Usage](doc/general_usage.md)
+- [Configuration](doc/configuration.md)
+- [API](doc/api.md)
+  - [Hooks](doc/api.md#hooks)
+  - [Inheritance](doc/api.md#inheritance)
+- [Schema](doc/schema.md)
+- [Validation](doc/validation.md)
+    - [Breaker](doc/validation.md#validation-breakers)
+        - [allowBlank](doc/validation/allowBlank.md)
+        - [validateIf](doc/validation/validateIf.md)
+        - [on (validation context)](doc/validation/on.md)
+    - [Normal Validation](doc/validation.md#normal-validations)
+        - [dType](doc/validation/dType.md)
+        - [presence](doc/validation/presence.md)
+        - [absence](doc/validation/absence.md)
+        - [only](doc/validation/only.md)
+        - [strictOnly](doc/validation/strictOnly.md)
+        - [min](doc/validation/min.md)
+        - [max](doc/validation/max.md)
+        - [isEmail](doc/validation/isEmail.md)
+        - [match](doc/validation/match.md)
+    - [Custom Validation](doc/validation/validate.md)
+    - [Additional Validations](doc/validation/additionalValidations.md)
+- [Localization](doc/localization.md)
+    - [i18next](doc/localization.md#i18next)
+    - [Custom Localization](doc/localization.md#custom-localization-method)
+    - [Custom Error Messages](doc/localization.md#custom-error-messages)
+
+
+
 # Validation Context
 
 It is possible to do validations only if a specific context is set.
@@ -139,9 +184,15 @@ contextContract.isValid("matchAnyContext") // magic context to match all context
 
 ## Development
 
+- [ ] implement arrays of mixed types
+- [ ] add beautiful custom localization
+- [ ] rethink renderAs and parseAs (maybe implement some sort of data reforming schema)
+- [ ] switch from (value, isRequired, dType, depth, contract) to ({value, isRequired, dType, depth, contract}) in validations
 - [ ] add example for i18next
-- [ ] validation modes: validate all (default), stop on first error, stop on first error per attribute
-- [ ] write README :D
+- [ ] add JSDoc
+- [ ] add TS types
+- [ ] add reader and writer hooks
+- [ ] add validation modes: validate all (default), stop on first error, stop on first error per attribute
 
 ## Contributing
 

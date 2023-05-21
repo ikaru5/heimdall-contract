@@ -1,5 +1,5 @@
 import {describe, expect, it} from '@jest/globals';
-import ContractBase from "../index.js"
+import {ContractBase} from "../index.js"
 
 describe("hooks handling", () => {
 
@@ -15,7 +15,7 @@ describe("hooks handling", () => {
 
     // should not be called and will be overwritten by base
     initAll() {
-      this.allInitedByHook = "base"
+      this.allInitedByHook = "nested"
     }
 
     defineSchema() {

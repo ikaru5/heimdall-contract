@@ -1,6 +1,6 @@
 import {describe, expect, it} from '@jest/globals';
 import ContractBase from "../../index.js"
-import validationDefinitions from "../../validations.js"
+import { validationDefinitions } from "../../validations.js"
 
 describe("presence validation", () => {
   class TestContract extends ContractBase {

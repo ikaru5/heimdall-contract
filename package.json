@@ -1,10 +1,16 @@
 {
   "name": "@ikaru5/heimdall-contract",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Validation and Representer Objects in your Frontend",
   "license": "MIT",
   "repository": "ikaru5/heimdall-contract",
   "main": "index.js",
+  "exports": {
+    ".": {
+      "import": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "keywords": [
     "heimddall",
     "contract",

@@ -1,5 +1,5 @@
 import {describe, expect, it} from '@jest/globals';
-import ContractBase from "../index.js"
+import { ContractBase } from "../index.js"
 
 class I18n {
   static lastKey = undefined
