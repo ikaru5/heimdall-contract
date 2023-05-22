@@ -18,6 +18,10 @@ These values represent validation contexts. For example:
 ```
 In the example above, the string field's validation rules will only be applied when the current validation context is either "contextA" or "contextB". Similarly, the number field's validation rules will only be applied when the current validation context is "contextA".
 
+## matchAnyContext
+
+There is a special validation context called `matchAnyContext`. If you specify this context like `isValid("matchAnyContext")` all validation rules will be applied. 
+
 ## Setting the Validation Context
 
 The validation context can be set when calling the isValid method of a contract. You can pass a single context or an array of contexts to isValid. For example:
