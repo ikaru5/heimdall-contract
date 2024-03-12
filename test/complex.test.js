@@ -216,4 +216,47 @@ describe("validation", () => {
     expect(signUpContract.toObject()).toStrictEqual(validInputObject)
 
   })
+
+  it("can ignore underscored fields", () => {
+    const schema = {
+      _email: {dType: "String", presence: true, isEmail: true, allowBlank: false},
+      username: {dType: "String", presence: true, min: 8, allowBlank: false}
+    }
+
+    const signUpContract = new ContractBase({schema})
+
+    const emptyObject = { _email: '', username: '' }
+    const emptyErrorsAfterValidationObject = {
+      _email: {messages: ["not present", 'must be a valid E-Mail']},
+      username: {messages: ["not present", 'must have at least 8 characters']}
+    }
+
+    expect(signUpContract.toObject()).toStrictEqual(emptyObject)
+    expect(signUpContract.errors).toStrictEqual({})
+    expect(signUpContract.isValid()).toBe(false)
+    expect(signUpContract.errors).toStrictEqual(emptyErrorsAfterValidationObject)
+
+    signUpContract.assign({ _email: 'some@email.com', username: 'theikarus' })
+    expect(signUpContract.isValid()).toBe(true)
+    expect(signUpContract.errors).toStrictEqual({})
+    expect(signUpContract.toObject()).toStrictEqual({ _email: 'some@email.com', username: 'theikarus' })
+
+    // now with ignoreUnderscoredFields
+    const signUpContract2 = new ContractBase({schema, ignoreUnderscoredFields: true})
+    const emptyObject2 = { username: '' }
+    const emptyErrorsAfterValidationObject2 = {
+      username: {messages: ["not present", 'must have at least 8 characters']}
+    }
+
+    expect(signUpContract2.toObject()).toStrictEqual(emptyObject2)
+    expect(signUpContract2.errors).toStrictEqual({})
+    expect(signUpContract2.isValid()).toBe(false)
+    expect(signUpContract2.errors).toStrictEqual(emptyErrorsAfterValidationObject2)
+
+    signUpContract2.assign({ _email: 'some@email.com', username: 'theikarus' })
+    expect(signUpContract2.isValid()).toBe(true)
+    expect(signUpContract2.errors).toStrictEqual({})
+    expect(signUpContract2.toObject()).toStrictEqual({ username: 'theikarus' })
+    expect(signUpContract2._email).toBe(undefined)
+  })
 })

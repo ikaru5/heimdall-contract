@@ -7,6 +7,8 @@
  */
 export const validate = function (schema = this.schema, depth = []) {
   for (const key of Object.keys(schema)) {
+    if (this.contractConfig.ignoreUnderscoredFields && key.startsWith("_")) continue // ignore underscored fields
+
     const value = schema[key]
 
     // if value has a dType, it is a property and not a nested object

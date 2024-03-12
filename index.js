@@ -36,6 +36,7 @@ export default class Contract {
     this.contractConfig = {
       i18next: undefined,
       localizationMethod: "Internal",
+      ignoreUnderscoredFields: options?.ignoreUnderscoredFields || false,
       _nonValidationConfigs: [
         "default", "errorMessage", "arrayOf", "innerValidate", "contract", "as", "parseAs", "renderAs"
       ]
@@ -120,6 +121,8 @@ export default class Contract {
     }
 
     for (const key of Object.keys(_currentScope)) {
+      if (this.contractConfig.ignoreUnderscoredFields && key.startsWith("_")) continue // ignore underscored fields
+
       const value = _currentScope[key]
       const inputValueKeys = value.parseAs || value.as || key
       // inputValueKeys can be a string or an array of strings -> if array, try to find a matching key in inputObject
@@ -204,6 +207,8 @@ export default class Contract {
   toObject(_depth = [], _currentScope = this.schema) {
     const out = {}
     for (const key of Object.keys(_currentScope)) {
+      if (this.contractConfig.ignoreUnderscoredFields && key.startsWith("_")) continue // ignore underscored fields
+
       const value = _currentScope[key]
       const renderKeys = value.renderAs || value.as || key // for parsing "as" can be an array of keys, but for rendering it must be a single key -> take the first one
       const renderKey = Array.isArray(renderKeys) ? renderKeys[0] : renderKeys
@@ -256,6 +261,8 @@ export default class Contract {
   _define(schema, depth) {
     for (const key of Object.keys(schema)) {
       const value = schema[key]
+      if (this.contractConfig.ignoreUnderscoredFields && key.startsWith("_")) continue // ignore underscored fields
+      
       if (undefined !== value["dType"]) {
         this._defineProperty(depth.concat(key), value)
       } else {
@@ -328,6 +335,7 @@ export default class Contract {
   _parseParent(parent) {
     this.contractConfig.localizationMethod = parent.contractConfig.localizationMethod
     this.contractConfig.i18next = parent.contractConfig.i18next
+    this.contractConfig.ignoreUnderscoredFields = parent.contractConfig.ignoreUnderscoredFields
 
     // merge additionalValidations
     const myBreaker = this._additionalValidations?.breaker
