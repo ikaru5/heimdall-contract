@@ -29,7 +29,8 @@ export const validateArray = function (depth, propertyConfiguration, key) {
   if (undefined === elements || 0 === elements.length) return // if no elements present nothing to validate
 
   // if definitions is a string, it is a dType and we can use the default validation of _validateProperty for each element
-  if ("string" === typeof propertyConfiguration.arrayOf) {
+  // or if it is an array of strings, it must be a mixed type array of basic types
+  if ("string" === typeof propertyConfiguration.arrayOf || (Array.isArray(propertyConfiguration.arrayOf) && "string" === typeof propertyConfiguration.arrayOf[0])) {
     if (undefined === propertyConfiguration.innerValidate) return // if no inner validations defined, no need to do something
 
     // create a stubbed configuration for the inner validation
@@ -38,7 +39,19 @@ export const validateArray = function (depth, propertyConfiguration, key) {
 
     // validate each element
     for (let index = 0; index < elements.length; index++) {
-      this._validateProperty(depth.concat(key).concat(index), stubbedConfig)
+      const newDepth = depth.concat(key).concat(index)
+
+      // on mixed type arrays, we need to determine the type of the element and try to validate it accordingly
+      if (Array.isArray(propertyConfiguration.arrayOf)) {
+        const element = this.getValueAtPath(newDepth)
+        stubbedConfig["dType"] = propertyConfiguration.arrayOf[0]
+        if (typeof element === "number" && propertyConfiguration.arrayOf.includes("Number")) stubbedConfig["dType"] = "Number"
+        else if (typeof element === "string" && propertyConfiguration.arrayOf.includes("String")) stubbedConfig["dType"] = "String"
+        else if (typeof element === "boolean" && propertyConfiguration.arrayOf.includes("Boolean")) stubbedConfig["dType"] = "Boolean"
+        else if (propertyConfiguration.arrayOf.includes("Generic")) stubbedConfig["dType"] = "Generic"
+      }
+
+      this._validateProperty(newDepth, stubbedConfig)
     }
   } else { // must be a contract, but may fail if nonsense provided
     for (let index = 0; index < elements.length; index++) {
@@ -56,10 +69,12 @@ export const validateArray = function (depth, propertyConfiguration, key) {
       // if element is not a function -> it is not a contract -> try creating a nested contract
       // this will most likely always be the case when values are assigned manually and not by assign-method
       if ("function" !== typeof elements[index]._parseParent) {
-        const nestedContract = this._defaultEmptyValueFor("Contract", propertyConfiguration.arrayOf)
-        nestedContract._parseParent(this) // set parent and its attributes like localization method
-        nestedContract.assign(elements[index])
-        elements[index] = nestedContract
+        elements[index] = this._createNestedContractForArray(
+          Array.isArray(propertyConfiguration.arrayOf) ?
+            propertyConfiguration.arrayOf.find(contractClass => this._getNameOfClass(contractClass) === elements[index]["arrayElementType"]) :
+            propertyConfiguration.arrayOf,
+          elements[index]
+        )
       }
 
       elements[index]._parseParent(this) // set parent and its attributes like localization method

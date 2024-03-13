@@ -102,6 +102,7 @@ Inherit from your base class and define your contracts! Have Fun!
   - [Hooks](doc/api.md#hooks)
   - [Inheritance](doc/api.md#inheritance)
 - [Schema](doc/schema.md)
+- [Mixed type Arrays](doc/mixed_type_arrays.md)
 - [Validation](doc/validation.md)
     - [Breaker](doc/validation.md#validation-breakers)
         - [allowBlank](doc/validation/allowBlank.md)
@@ -184,7 +185,7 @@ contextContract.isValid("matchAnyContext") // magic context to match all context
 
 ## Development
 
-- [ ] implement arrays of mixed types
+- [x] implement arrays of mixed types
 - [ ] add beautiful custom localization
 - [ ] rethink renderAs and parseAs (maybe implement some sort of data reforming schema)
 - [ ] switch from (value, isRequired, dType, depth, contract) to ({value, isRequired, dType, depth, contract}) in validations

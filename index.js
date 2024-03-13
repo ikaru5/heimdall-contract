@@ -139,11 +139,20 @@ export default class Contract {
               if (undefined === value.arrayOf) console.error("Type of array must be defined in arrayOf: " + _depth.concat(key).join("."))
               if (undefined === value.arrayOf || "string" === typeof value.arrayOf) {
                 this.setValueAtPath(_depth.concat(key).concat(index), inputValue[index] || this._defaultEmptyValueFor(value.arrayOf))
+              } else if (Array.isArray(value.arrayOf)) {
+                // Array of multiple types
+                const isBasicDataType = !value.arrayOf.some(type => !["String", "Number", "Boolean", "Generic"].includes(type))
+                if (isBasicDataType) {
+                  // simply assign the values if they are basic types
+                  this.setValueAtPath(_depth.concat(key).concat(index), inputValue[index] || this._defaultEmptyValueFor(value.arrayOf))
+                } else {
+                  // otherwise this is must be Contracts
+                  if ("object" !== typeof inputValue[index]) console.error("Array of objects must be an array of objects! Property: " + _depth.concat(key).join(".") + " Index: " + index)
+                  const requiredContractClass = value.arrayOf.find(contractClass => this._getNameOfClass(contractClass) === inputValue[index]["arrayElementType"])
+                  this.setValueAtPath(_depth.concat(key).concat(index), this._createNestedContractForArray(requiredContractClass, inputValue[index]))
+                }
               } else {  // must be a contract, but may fail if nonsense provided
-                const nestedContract = this._defaultEmptyValueFor("Contract", value.arrayOf)
-                nestedContract._parseParent(this)
-                nestedContract.assign(inputValue[index])
-                this.setValueAtPath(_depth.concat(key).concat(index), nestedContract)
+                this.setValueAtPath(_depth.concat(key).concat(index), this._createNestedContractForArray(value.arrayOf, inputValue[index]))
               }
             }
             break
@@ -221,14 +230,23 @@ export default class Contract {
               if (undefined === value.arrayOf || "string" === typeof value.arrayOf) {
                 // if Array consists of basic types, we can simply return the value
                 return element
+              } else if (Array.isArray(value.arrayOf)) {
+                const isBasicDataType = !value.arrayOf.some(type => !["String", "Number", "Boolean", "Generic"].includes(type))
+                if (isBasicDataType) {
+                  // simply return the values if they are basic types
+                  return element
+                } else {
+                  // otherwise this is must be nested contract
+                  if (element.toObject) return element.toObject()
+                  // if elements were assigned directly no new nested contract was created, do it here!
+                  const requiredContractClass = value.arrayOf.find(contractClass => this._getNameOfClass(contractClass) === element["arrayElementType"])
+                  return this._createNestedContractForArray(requiredContractClass, element).toObject()
+                }
               } else {
                 // otherwise this is must be nested contract
                 if (element.toObject) return element.toObject()
                 // if elements were assigned directly no new nested contract was created, do it here!
-                const nestedContract = this._defaultEmptyValueFor("Contract", value.arrayOf)
-                nestedContract._parseParent(this)
-                nestedContract.assign(element)
-                return nestedContract.toObject()
+                return this._createNestedContractForArray(value.arrayOf, element).toObject()
               }
             })
             break
@@ -245,9 +263,26 @@ export default class Contract {
     return out
   }
 
+
   // -----------------------------------------------------------------------------------------------
   //  Private Methods
   // -----------------------------------------------------------------------------------------------
+
+  /**
+   * Returns name of a class.
+   * @param className
+   * @private
+   */
+  _getNameOfClass(className) {
+    return typeof className === 'function' ? className.name : className
+  }
+
+  _createNestedContractForArray(contractClassOrDefinition, input) {
+    const nestedContract = this._defaultEmptyValueFor("Contract", contractClassOrDefinition)
+    nestedContract._parseParent(this)
+    nestedContract.assign(input)
+    return nestedContract
+  }
 
   // DEFINITION AND INIT
 
