@@ -36,12 +36,15 @@ export default class Contract {
     this.contractConfig = {
       i18next: undefined,
       localizationMethod: "Internal",
-      ignoreUnderscoredFields: options?.ignoreUnderscoredFields || false,
+      ignoreUnderscoredFields: false,
       _nonValidationConfigs: [
         "default", "errorMessage", "arrayOf", "innerValidate", "contract", "as", "parseAs", "renderAs"
       ]
     }
     this.setConfig()
+    if (options && Object.keys(options).includes("ignoreUnderscoredFields"))
+      this.contractConfig.ignoreUnderscoredFields = options["ignoreUnderscoredFields"]
+    
     this._additionalValidations = this.addAdditionalValidations()
     this._setValidations()
 
