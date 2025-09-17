@@ -23,6 +23,14 @@ export const validate = function (schema = this.schema, depth = []) {
   }
 }
 
+/**
+ * Validates array elements according to their configuration.
+ * Handles both basic data types and nested contracts in arrays.
+ * @param {Array<string>} depth - Current depth path in the schema
+ * @param {Object} propertyConfiguration - Configuration object for the array property
+ * @param {string} key - Property key name
+ * @private
+ */
 export const validateArray = function (depth, propertyConfiguration, key) {
   const elements = this.getValueAtPath(depth.concat(key))
 
@@ -167,7 +175,18 @@ export const validateProperty = function (depth, propertyConfiguration) {
   for (const validationName of remainingValidations) console.error("Undefined validation: " + validationName)
 }
 
-// helper function to check validation breakers like "allowBlank" or "validateIf"
+/**
+ * Helper function to check validation breakers like "allowBlank" or "validateIf".
+ * Breakers can skip remaining validations if their conditions are met.
+ * @param {Contract} instance - The contract instance
+ * @param {Array<string>} validations - Array of validation names to check
+ * @param {*} propValue - The property value being validated
+ * @param {Object} propertyConfiguration - Configuration object for the property
+ * @param {string} dType - Data type of the property
+ * @param {Array<string>} depth - Current depth path in the schema
+ * @returns {Object} Object with usedBreakers array and outbreaksValidations boolean
+ * @private
+ */
 const checkBreakers = (instance, validations, propValue, propertyConfiguration, dType, depth) => {
   const usedBreakers = []
   for (const breakerName of validations) {
@@ -188,6 +207,18 @@ const checkBreakers = (instance, validations, propValue, propertyConfiguration, 
   return {usedBreakers, outbreaksValidations: false}
 }
 
+/**
+ * Retrieves the appropriate error message for a failed validation.
+ * Supports custom error messages, localization, and fallback to default validation messages.
+ * @param {*} propertyValue - The property value that failed validation
+ * @param {Object} propertyConfiguration - Configuration object for the property
+ * @param {string} dType - Data type of the property
+ * @param {Array<string>} depth - Current depth path in the schema
+ * @param {string} validationScope - Validation scope ("normal" or "breaker")
+ * @param {string} validationName - Name of the validation that failed
+ * @returns {string} The error message to display
+ * @private
+ */
 export const getErrorMessageFor = function (propertyValue, propertyConfiguration, dType, depth, validationScope, validationName) {
   if (undefined !== propertyConfiguration.errorMessage) {
     const handleStringResult = (stringResult) => {
@@ -208,6 +239,12 @@ export const getErrorMessageFor = function (propertyValue, propertyConfiguration
   return this._validations[validationScope][validationName].message({value: propertyValue, config: propertyConfiguration[validationName], dType, depth, contract: this, customLocalization: this.contractConfig.customLocalization})
 }
 
+/**
+ * Returns a generic error message when no specific error message is available.
+ * Supports localization through custom localization function if configured.
+ * @returns {string} The generic error message
+ * @private
+ */
 export const getGenericErrorMessage = function () {
   if (this.contractConfig.customLocalization) {
     return this.contractConfig.customLocalization({translationKey: "errors:generic", translationKeys: ["errors:generic"], fallbackValue: "Field invalid!", context: {contract: this}})

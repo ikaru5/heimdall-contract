@@ -79,6 +79,14 @@ export default class Contract {
     )
   }
 
+  /**
+   * Hook method to add custom validations to the contract.
+   * Override this method to add custom validation rules.
+   * @param {Object} validations - Custom validations object
+   * @param {Object} validations.breaker - Breaker validations that can skip remaining validations
+   * @param {Object} validations.normal - Normal validations that run after breakers
+   * @returns {Object} The validations object with custom validation definitions
+   */
   addAdditionalValidations(validations = { breaker: {}, normal: {} }) {
     return validations
   }
@@ -89,6 +97,10 @@ export default class Contract {
   init() {
   }
 
+  /**
+   * Hook method to set custom configuration for the contract.
+   * Override this method to customize contract behavior and settings.
+   */
   setConfig() {
   }
 
@@ -280,6 +292,13 @@ export default class Contract {
     return typeof className === 'function' ? className.name : className
   }
 
+  /**
+   * Creates a nested contract instance for array elements.
+   * @param {Function|Object} contractClassOrDefinition - Contract class constructor or schema definition
+   * @param {Object} input - Input data to assign to the nested contract
+   * @returns {Contract} The created and configured nested contract instance
+   * @private
+   */
   _createNestedContractForArray(contractClassOrDefinition, input) {
     const nestedContract = this._defaultEmptyValueFor("Contract", contractClassOrDefinition)
     nestedContract._parseParent(this)

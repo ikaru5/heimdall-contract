@@ -193,7 +193,7 @@ contextContract.isValid("matchAnyContext") // magic context to match all context
 - [x] add beautiful custom localization
 - [x] switch from (value, isRequired, dType, depth, contract) to ({value, isRequired, dType, depth, contract}) in validations
 - [x] add example for i18next
-- [ ] add JSDoc
+- [x] add JSDoc
 - [ ] add TS types
 
 ## Contributing
