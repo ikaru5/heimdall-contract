@@ -36,6 +36,7 @@ export default class Contract {
     this.contractConfig = {
       i18next: undefined,
       localizationMethod: "Internal",
+      tryTranslateMessages: true, // If true, will try to use i18n.t on passed messages. Only affects external localization methods.
       ignoreUnderscoredFields: false,
       _nonValidationConfigs: [
         "default", "errorMessage", "arrayOf", "innerValidate", "contract", "as", "parseAs", "renderAs"

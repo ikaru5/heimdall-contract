@@ -39,7 +39,7 @@ class SignupContract extends ContractBase {
             dType: "String", presence: true,
             validate: (value, contract) => {
               return value === contract.password ? true : false // for custom error message return string instead of false. 
-              // custom validation translation is not implemented yet, so you have to return the error message in the language you want to display it
+              // Note: Custom validation functions return final messages and are not automatically translated
             }
           },
           address: {
@@ -127,6 +127,7 @@ Inherit from your base class and define your contracts! Have Fun!
     - [i18next](doc/localization.md#i18next)
     - [Custom Localization](doc/localization.md#custom-localization-method)
     - [Custom Error Messages](doc/localization.md#custom-error-messages)
+    - [Automatic Message Translation](doc/localization.md#automatic-message-translation)
 
 
 

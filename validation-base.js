@@ -190,13 +190,18 @@ const checkBreakers = (instance, validations, propValue, propertyConfiguration, 
 
 export const getErrorMessageFor = function (propertyValue, propertyConfiguration, dType, depth, validationScope, validationName) {
   if (undefined !== propertyConfiguration.errorMessage) {
-    if ("string" === typeof propertyConfiguration.errorMessage) return propertyConfiguration.errorMessage
+    const handleStringResult = (stringResult) => {
+      if (this.contractConfig.tryTranslateMessages && this.contractConfig.localizationMethod === "i18next") return this.contractConfig.i18next.t(stringResult)
+      return stringResult
+    }
+
+    if ("string" === typeof propertyConfiguration.errorMessage) return handleStringResult(propertyConfiguration.errorMessage)
     if ("function" === typeof propertyConfiguration.errorMessage) return propertyConfiguration.errorMessage(propertyValue, this, validationName, dType, depth, validationScope)
 
-    if ("string" === typeof propertyConfiguration.errorMessage[validationName]) return propertyConfiguration.errorMessage[validationName]
+    if ("string" === typeof propertyConfiguration.errorMessage[validationName]) return handleStringResult(propertyConfiguration.errorMessage[validationName])
     if ("function" === typeof propertyConfiguration.errorMessage[validationName]) return propertyConfiguration.errorMessage[validationName](propertyValue, this, validationName, dType, depth, validationScope)
 
-    if ("string" === typeof propertyConfiguration.errorMessage.default) return propertyConfiguration.errorMessage.default
+    if ("string" === typeof propertyConfiguration.errorMessage.default) return handleStringResult(propertyConfiguration.errorMessage.default)
     if ("function" === typeof propertyConfiguration.errorMessage.default) return propertyConfiguration.errorMessage.default(propertyValue, this, validationName, dType, depth, validationScope)
   }
 

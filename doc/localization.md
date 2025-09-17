@@ -73,4 +73,51 @@ You can also set custom error messages for each field. Just use the `errorMessag
 }
 ```
 
+## Automatic Message Translation
+
+When using i18next as your localization method, Heimdall Contract can automatically translate your custom error messages. This feature is controlled by the `tryTranslateMessages` configuration option (enabled by default).
+
+```javascript
+export default class Contract extends ContractBase {
+  setConfig() {
+    this.contractConfig.localizationMethod = "i18next"
+    this.contractConfig.i18next = i18n
+    this.contractConfig.tryTranslateMessages = true // default: true
+  }
+}
+```
+
+### How it works
+
+When `tryTranslateMessages` is enabled and you're using i18next:
+
+- **String error messages** will be automatically passed to `i18n.t()` for translation
+- **Function error messages** will NOT be translated (functions are expected to return final messages)
+- **Object error messages** with string values will have their string values translated
+
+```javascript
+{
+  // This will be translated using i18n.t("custom.error.message")
+  fieldA: {dType: "String", presence: true, errorMessage: "custom.error.message"},
+  
+  // The string values will be translated, but the function will not
+  fieldB: {dType: "String", presence: true, errorMessage: {
+    presence: "custom.presence.message", // will be translated
+    dType: (value, contract) => "Dynamic message" // will NOT be translated
+  }},
+  
+  // Functions are never translated - they should return final messages
+  fieldC: {dType: "String", presence: true, errorMessage: () => "Final message"},
+}
+```
+
+### Benefits
+
+- Seamless integration with existing i18next translation keys
+- No need to manually call `i18n.t()` in your error message definitions
+- Flexible: you can still use functions for dynamic messages that shouldn't be translated
+- Backward compatible: can be disabled by setting `tryTranslateMessages` to `false`
+
+**Note**: This feature only works when `localizationMethod` is set to "i18next". With other localization methods, custom error messages are used as-is.
+
 [back to root](../README.md#Documentation)

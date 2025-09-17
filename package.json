@@ -1,6 +1,6 @@
 {
   "name": "@ikaru5/heimdall-contract",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Validation and Representer Objects in your Frontend",
   "license": "MIT",
   "repository": "ikaru5/heimdall-contract",

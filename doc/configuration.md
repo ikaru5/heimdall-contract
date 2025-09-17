@@ -14,6 +14,7 @@ export default class Contract extends ContractBase {
   setConfig() {
     this.contractConfig.localizationMethod = "i18next" // default is "Internal"
     this.contractConfig.i18next = i18n
+    this.contractConfig.tryTranslateMessages = true // default is true - automatically trys to translate error messages, if no translation the message will be returned as is
     
     // IMPORTANT NOTE: Do not override the whole `contractConfig` property since it also used internally!
   }
