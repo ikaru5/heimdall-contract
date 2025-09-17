@@ -131,7 +131,7 @@ export const validateProperty = function (depth, propertyConfiguration) {
   } else {
     for (const validationName of validations) { // iterate over all validations
       if (undefined !== this._validations.normal[validationName]) { // check if validation is defined
-        if (!this._validations.normal[validationName].check(propValue, propertyConfiguration[validationName], dType, depth, this)) { // validate -> validation returns true if valid
+        if (!this._validations.normal[validationName].check({value: propValue, config: propertyConfiguration[validationName], dType, depth, contract: this})) { // validate -> validation returns true if valid
           const errorMessage = this._getErrorMessageFor(propValue, propertyConfiguration, dType, depth, "normal", validationName)
           errors.push(errorMessage)
           this.isValidState = false
@@ -172,7 +172,7 @@ const checkBreakers = (instance, validations, propValue, propertyConfiguration, 
   const usedBreakers = []
   for (const breakerName of validations) {
     if (undefined !== instance._validations.breaker[breakerName]) {
-      if (instance._validations.breaker[breakerName].check(propValue, propertyConfiguration[breakerName], dType, depth, instance)) {
+      if (instance._validations.breaker[breakerName].check({value: propValue, config: propertyConfiguration[breakerName], dType, depth, contract: instance})) {
         return {outbreaksValidations: true} // if one of the breakers return true, the field is valid
       }
       usedBreakers.push(breakerName)
@@ -205,7 +205,7 @@ export const getErrorMessageFor = function (propertyValue, propertyConfiguration
     if ("function" === typeof propertyConfiguration.errorMessage.default) return propertyConfiguration.errorMessage.default(propertyValue, this, validationName, dType, depth, validationScope)
   }
 
-  return this._validations[validationScope][validationName].message(propertyValue, propertyConfiguration[validationName], dType, depth, this, this.contractConfig.customLocalization)
+  return this._validations[validationScope][validationName].message({value: propertyValue, config: propertyConfiguration[validationName], dType, depth, contract: this, customLocalization: this.contractConfig.customLocalization})
 }
 
 export const getGenericErrorMessage = function () {

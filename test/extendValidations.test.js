@@ -5,10 +5,10 @@ describe("extend validations", () => {
   const validationsWithOliver = {
     normal: {
       mustBeOliver: {
-        check: (value, isRequired, dType, depth, contract) => {
+        check: ({value, config: isRequired, dType, depth, contract}) => {
           return value === "Oliver"
         },
-        message: (value, dataType, dType, depth, contract) => {
+        message: ({value, config: dataType, dType, depth, contract}) => {
           return `"${value}" is not Oliver >:-(`
         }
       },
@@ -18,10 +18,10 @@ describe("extend validations", () => {
   const validationsWithRico = {
     normal: {
       mustBeRico: {
-        check: (value, isRequired, dType, depth, contract) => {
+        check: ({value, config: isRequired, dType, depth, contract}) => {
           return value === "Rico"
         },
-        message: (value, dataType, dType, depth, contract) => {
+        message: ({value, config: dataType, dType, depth, contract}) => {
           return `"${value}" is not Rico >:-(`
         }
       },
@@ -31,10 +31,10 @@ describe("extend validations", () => {
   const validationsWithWrongRico = {
     normal: {
       mustBeRico: {
-        check: (value, isRequired, dType, depth, contract) => {
+        check: ({value, config: isRequired, dType, depth, contract}) => {
           return value === "Wrong Rico"
         },
-        message: (value, dataType, dType, depth, contract) => {
+        message: ({value, config: dataType, dType, depth, contract}) => {
           return `"${value}" is not Wrong Rico >:-(`
         }
       },

@@ -191,12 +191,10 @@ contextContract.isValid("matchAnyContext") // magic context to match all context
 
 - [x] implement arrays of mixed types
 - [x] add beautiful custom localization
-- [ ] switch from (value, isRequired, dType, depth, contract) to ({value, isRequired, dType, depth, contract}) in validations
-- [ ] add example for i18next
+- [x] switch from (value, isRequired, dType, depth, contract) to ({value, isRequired, dType, depth, contract}) in validations
+- [x] add example for i18next
 - [ ] add JSDoc
 - [ ] add TS types
-- [ ] add reader and writer hooks
-- [ ] add validation modes: validate all (default), stop on first error, stop on first error per attribute
 
 ## Contributing
 

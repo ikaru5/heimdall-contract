@@ -70,7 +70,7 @@ describe("presence validation", () => {
 
     // this is easier to test directly
     expect(
-      checkMethod("doesnt matter", true, "Invalid")
+      checkMethod({value: "doesnt matter", config: true, dType: "Invalid"})
     ).toBe(false)
   })
 })

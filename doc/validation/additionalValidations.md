@@ -11,9 +11,9 @@ To create an extended validation rule, you need to define a validation object an
 
 The `addAdditionalValidations` method should return an object that defines your custom validations. Each validation rule should have a `check` and `message` function.
 
-The `check` function should return `true` if the validation passes, and `false` otherwise. It receives the parameters `(value, isRequired, dType, depth, contract)`.
+The `check` function should return `true` if the validation passes, and `false` otherwise. It receives named parameters using destructuring: `({value, config, dType, depth, contract})`.
 
-The `message` function should return a string that will be used as the error message when the validation fails. It receives the same parameters as the `check` function.
+The `message` function should return a string that will be used as the error message when the validation fails. It receives the same named parameters as the `check` function, plus an optional `customLocalization` parameter.
 
 Here is an example of a contract with a custom validation rule:
 
@@ -23,10 +23,10 @@ class MyContract extends ContractBase {
     return {
       normal: {
         mustBeOliver: {
-          check: (value, isRequired, dType, depth, contract) => {
+          check: ({value, config: isRequired, dType, depth, contract}) => {
             return value === "Oliver"
           },
-          message: (value, dataType, dType, depth, contract) => {
+          message: ({value, config: dataType, dType, depth, contract, customLocalization}) => {
             return `"${value}" is not Oliver >:-(`
           }
         },
