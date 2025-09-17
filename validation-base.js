@@ -191,7 +191,7 @@ const checkBreakers = (instance, validations, propValue, propertyConfiguration, 
 export const getErrorMessageFor = function (propertyValue, propertyConfiguration, dType, depth, validationScope, validationName) {
   if (undefined !== propertyConfiguration.errorMessage) {
     const handleStringResult = (stringResult) => {
-      if (this.contractConfig.tryTranslateMessages && this.contractConfig.localizationMethod === "i18next") return this.contractConfig.i18next.t(stringResult)
+      if (this.contractConfig.tryTranslateMessages && this.contractConfig.localizationMethod === "i18next") return this.contractConfig.i18next.t(stringResult, { defaultValue: stringResult })
       return stringResult
     }
 
