@@ -3,7 +3,10 @@
   "version": "0.5.1",
   "description": "Validation and Representer Objects in your Frontend",
   "license": "MIT",
-  "repository": "ikaru5/heimdall-contract",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ikaru5/heimdall-contract.git"
+  },
   "type": "module",
   "main": "index.js",
   "exports": {
