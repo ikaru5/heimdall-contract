@@ -169,4 +169,52 @@ describe("arrays", () => {
     })
   })
 
+  it('should handle array assignment with mixed basic data types', () => {
+    class TestContractMixedBasic extends ContractBase {
+      defineSchema() {
+        return {
+          ...super.defineSchema(),
+          ...{
+            mixedBasic: {dType: "Array", arrayOf: ["String", "Number", "Boolean"]}
+          }
+        }
+      }
+    }
+
+    const contract = new TestContractMixedBasic()
+    // Directly assign array to trigger the specific branch condition
+    contract.assign({mixedBasic: ["test", 123, true, null]})
+    
+    expect(contract.mixedBasic).toStrictEqual(["test", 123, true, null])
+    expect(contract.isValid()).toBe(true)
+  })
+
+  it('should handle error condition when non-object passed to Contract array', () => {
+    class TestContractForArray extends ContractBase {
+      defineSchema() {
+        return {
+          name: {dType: "String"}
+        }
+      }
+    }
+
+    class TestContractWithError extends ContractBase {
+      defineSchema() {
+        return {
+          ...super.defineSchema(),
+          ...{
+            contractArray: {dType: "Array", arrayOf: [TestContractForArray]}
+          }
+        }
+      }
+    }
+
+    const contract = new TestContractWithError()
+    // This should trigger the error condition on line 153 when non-object is passed
+    contract.assign({contractArray: ["not an object", {name: "valid"}]})
+    
+    // The assignment should still work despite the error
+    expect(Array.isArray(contract.contractArray)).toBe(true)
+  })
+
 })

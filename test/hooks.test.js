@@ -76,4 +76,31 @@ describe("hooks handling", () => {
     expect(testContract.allInitedByHook).toBe("base")
   })
 
+  it('should execute initNested function when passed in constructor options', () => {
+    let initNestedCalled = false
+    const initNestedFunction = function() {
+      this.customInitNestedValue = "executed"
+      initNestedCalled = true
+    }
+    
+    class SimpleTestContract extends ContractBase {
+      defineSchema() {
+        return {
+          ...super.defineSchema(),
+          ...{
+            name: {dType: "String"}
+          }
+        }
+      }
+    }
+    
+    const testContract = new SimpleTestContract({
+      initNested: initNestedFunction
+    })
+    
+    expect(initNestedCalled).toBe(true)
+    expect(testContract.customInitNestedValue).toBe("executed")
+    expect(typeof testContract.initNested).toBe("function")
+  })
+
 })

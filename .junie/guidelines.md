@@ -191,4 +191,4 @@ All commit messages must follow: `[TYPE] brief description in lowercase`
 
 ---
 
-*This project maintains 99%+ test coverage. Always add tests for new features and ensure existing tests pass before submitting changes.*
+*This project maintains 100% test coverage. Always add tests for new features and ensure existing tests pass before submitting changes.*
