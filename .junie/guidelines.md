@@ -1,75 +1,118 @@
-# Heimdall Contract - Development Guidelines
+# Heimdall Contract - AI Development Guidelines
 
-*Last updated: 2025-09-17*
+## What is Heimdall Contract?
 
-> **⚠️ CRITICAL REMINDER**: After every code change, you must verify whether this guidelines document, the README.md, or any files in the `doc/` directory need to be updated or extended. Documentation maintenance is essential for project integrity and developer experience.
+**Heimdall Contract** is a lightweight JavaScript validation library for creating data objects with intuitive validation schemas. Think of it like Ruby's Trailblazer-Reform for JavaScript - you define contracts that validate and manage your data with support for inheritance, nested objects, and custom validations.
 
-## Build/Configuration Instructions
+**Key Features:**
+- Framework-agnostic (works with React, Vue, Node.js, etc.)
+- Lightweight (3.1kb minified + gzipped)  
+- 100% test coverage
+- Built-in i18n support
+- Nested object validation
+- Schema inheritance
 
-### Prerequisites
-- **Node.js version**: 24.8.0 (specified in `.tool-versions`)
-- **Package manager**: npm (lock file present)
+## Quick Start
 
-### Setup
 ```bash
 # Install dependencies
 npm install
 
-# No build step required - project uses ES modules directly
-```
-
-### Configuration Files
-- **Babel**: `babel.config.json` - configured with `@babel/preset-env` targeting current Node.js version
-- **Jest**: `jest.config.js` - comprehensive configuration with:
-  - v8 coverage provider
-  - Node.js test environment
-  - Babel transformation for JS/TS files
-  - Setup file at `test/setup.js` (mocks console methods)
-  - Coverage reporting enabled
-
-## Testing Information
-
-### Running Tests
-```bash
-# Run all tests with coverage
+# Run tests (the main workflow)
 npm test
-
-# Run specific test file
-npm test -- test/example-demo.test.js
-
-# Jest is configured to run with --coverage by default
 ```
 
-### Test Structure
-- Tests located in `test/` directory
-- Subdirectories: `test/breaker/`, `test/validations/`
-- Current coverage: 99.56% statements, 96.42% branches, 100% functions
+That's it! No build step needed - the project uses ES modules directly.
 
-### Adding New Tests
-Follow the established patterns:
+## Essential Workflow
 
+**Main development command:**
+```bash
+npm test  # Runs Jest with coverage reporting
+```
+
+This is the primary tool you'll use. It runs all tests and shows coverage statistics.
+
+## Project Structure
+
+```
+heimdall-contract/
+├── index.js                    # Main Contract class (~400 lines)
+├── validation-base.js          # Core validation logic (~200 lines)  
+├── validations.js             # All validation definitions (~450 lines)
+├── test/                      # Test files
+│   ├── breaker/              # Tests for breaker validations
+│   └── validations/          # Tests for normal validations
+├── doc/                       # Comprehensive documentation
+│   ├── api.md               # API documentation
+│   ├── validation/          # Individual validation docs
+│   └── ...                  # Usage guides
+└── package.json              # Only has `npm test` script
+```
+
+### Core Files Explained
+
+**`index.js`** - The main Contract class
+- Exports the default Contract class that users extend
+- Handles schema definition, property management, validation orchestration
+- Supports hooks (init, initNested, initAll) and configuration
+
+**`validation-base.js`** - Validation engine
+- Core functions: `validate()`, `validateArray()`, `validateProperty()`
+- Handles recursive validation of nested objects and arrays  
+- Manages validation flow (breakers first, then normal validations)
+
+**`validations.js`** - Validation definitions
+- Defines all available validations in two categories:
+  - **Breaker validations**: `allowBlank`, `on` (skip remaining if matched)
+  - **Normal validations**: `dType`, `presence`, `isEmail`, etc.
+- Each validation has `check()` and `message()` functions
+
+## How to Add Features/Fix Issues
+
+### 1. Understand the Pattern
+Contracts extend the base class and define schemas:
+
+```javascript
+class MyContract extends Contract {
+  defineSchema() {
+    return {
+      name: {dType: "String", presence: true},
+      email: {dType: "String", isEmail: true}
+    }
+  }
+}
+```
+
+### 2. Common Tasks
+
+**Adding new validation:**
+1. Add definition to `validations.js` (breaker or normal section)
+2. Create test file in `test/validations/` or `test/breaker/`
+3. Add documentation in `doc/validation/`
+
+**Modifying core logic:**
+1. Edit `index.js` (Contract class) or `validation-base.js` (validation engine)
+2. Run `npm test` to ensure nothing breaks
+3. Add tests for new functionality
+
+**Testing pattern:**
 ```javascript
 import {describe, expect, it} from '@jest/globals';
 import ContractBase from "../index.js"
 
-describe("Your Test Suite", () => {
+describe("Feature Test", () => {
   class TestContract extends ContractBase {
     defineSchema() {
       return {
-        ...super.defineSchema(),
-        ...{
-          // Define your test schema
-          name: {dType: "String", presence: true},
-          email: {dType: "String", presence: true, isEmail: true}
-        }
+        field: {dType: "String", yourNewValidation: true}
       }
     }
   }
 
   it('should validate correctly', () => {
     const contract = new TestContract()
-    contract.name = "Test"
-    contract.email = "test@example.com"
+    contract.field = "test value"
     
     expect(contract.isValid()).toBe(true)
     expect(contract.errors).toStrictEqual({})
@@ -77,101 +120,28 @@ describe("Your Test Suite", () => {
 })
 ```
 
-### Key Testing Conventions
-- Use ES6 imports from `@jest/globals`
-- Create test contracts extending `ContractBase`
-- Test both valid and invalid scenarios
-- Check `isValid()` method and `errors` object structure
-- Error messages follow specific formats (e.g., "must be a valid E-Mail")
+### 3. Key Concepts
 
-## Development Information
-
-### Code Style & Architecture
-
-#### ES Module Structure
-- Project uses ES6 modules with `import`/`export`
-- Main entry: `index.js` (exports default Contract class)
-- Validation logic: `validation-base.js` (exported functions)
-- Validation definitions: `validations.js` (exported object)
-
-#### Key Architectural Patterns
-
-**Contract Class Design:**
-- Constructor accepts options object with optional schema, hooks
-- Uses method binding for validation functions
-- Implements hook pattern (`init()`, `initNested()`, `initAll()`)
-- Configuration through `contractConfig` object
-
-**Validation System:**
-- Two-tier validation: "breaker" and "normal" validations
-- Breaker validations run first, can skip remaining validations
-- Each validation has `check()`, `message()`, and `i18next()` functions
-- Support for custom validations and error messages
+**Validation Flow:**
+1. Breaker validations run first (`allowBlank`, `on`)
+2. If breaker passes, remaining validations are skipped  
+3. Normal validations run in schema definition order
 
 **Data Types:**
-- Supported dTypes: "String", "Number", "Boolean", "Array", "Contract", "Generic"
-- Schema definition through `defineSchema()` method
-- Nested object support with recursive validation
+- `"String"`, `"Number"`, `"Boolean"`, `"Array"`, `"Contract"`, `"Generic"`
 
-#### JSDoc Standards
-- Comprehensive JSDoc comments for all public methods
-- Type definitions using `@typedef`
-- Parameter documentation with types and descriptions
+**Reserved:**
+- `dType` is required and reserved
+- Configuration keys: `["default", "errorMessage", "arrayOf", "innerValidate", "contract", "as", "parseAs", "renderAs"]`
 
-#### Error Handling Conventions
-- Validation errors stored in `errors` object
-- Error structure: `{fieldName: {messages: ["error message"]}}`
-- Generic error fallback with localization support
-- Console error logging for undefined validations
+### 4. Documentation Updates
 
-#### Internationalization
-- Built-in i18next integration
-- Configurable localization method
-- Custom error message support (string or function)
-- Translation key fallback patterns
+> **⚠️ IMPORTANT**: After any code change, check if you need to update:
+> - This guidelines file
+> - README.md  
+> - Files in `doc/` directory
 
-### Project-Specific Conventions
-
-#### Reserved Keywords
-- `dType` is reserved and cannot be used as property name
-- Underscore-prefixed fields can be ignored via config
-- Non-validation configs: `["default", "errorMessage", "arrayOf", "innerValidate", "contract", "as", "parseAs", "renderAs"]`
-
-#### Validation Context
-- Support for validation contexts (e.g., different rules for create vs update)
-- Context matching through `on` breaker validation
-- Array context support for multiple contexts
-
-#### Schema Inheritance
-- Use `...super.defineSchema()` for inheritance
-- Contracts can extend other contracts
-- Validation configuration inheritance supported
-
-### Debugging Tips
-
-#### Common Error Messages
-- `"Field invalid!"` - Generic fallback message
-- `"not present"` - Presence validation failure
-- `"must be a valid E-Mail"` - Email validation failure
-- `"Undefined validation: [name]"` - Typo in validation name
-
-#### Testing Console Output
-- Console methods are mocked in tests (see `test/setup.js`)
-- Error logging for undefined validations helps catch typos
-- Use specific test cases to verify error message formats
-
-#### Validation Flow Debug
-1. Breaker validations run first (`allowBlank`, `validateIf`, `on`)
-2. If breaker succeeds, normal validations are skipped
-3. Normal validations run in schema definition order
-4. Custom validations via `validate` function supported
-5. Error aggregation at field level
-
-### Performance Considerations
-- Validation runs synchronously
-- Early exit via breaker validations for performance
-- Method binding in constructor for context preservation
-- Shallow cloning for nested object validation
+The project maintains comprehensive documentation - keep it current!
 
 ## Git Commit Message Style Guide
 
