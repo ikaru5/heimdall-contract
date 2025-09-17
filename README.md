@@ -16,7 +16,7 @@ Target is to create Contracts like Rubys Trailblazer-Reform for your JS-Frontend
 - DOCUMENTED: The documentation is written in a way that you can understand it without any prior knowledge.
 - FLEXIBLE: You can use Heimdall Contracts in any JS project. It is not tied to any framework or state management system.
 - LIGHTWEIGHT: Heimdall Contracts is lightweight. It has no dependencies and is only 3.1kb minified and gzipped.
-- TRANSLATABLE: You can use your own translation library or use the included i18next integration for error messages.
+- TRANSLATABLE: You can use your own translation library like i18next for error messages.
 
 ## Example
 
@@ -190,7 +190,7 @@ contextContract.isValid("matchAnyContext") // magic context to match all context
 ## Development
 
 - [x] implement arrays of mixed types
-- [ ] add beautiful custom localization
+- [x] add beautiful custom localization
 - [ ] switch from (value, isRequired, dType, depth, contract) to ({value, isRequired, dType, depth, contract}) in validations
 - [ ] add example for i18next
 - [ ] add JSDoc
@@ -214,6 +214,6 @@ If you have ideas on how to develop heimdall or what features it is missing, I w
 
 ## Copyright
 
-Copyright (c) 2020 Kirill Kulikov <k.kulikov94@gmail.com>
+Copyright (c) 2025 Kirill Kulikov <k.kulikov94@gmail.com>
 
 `heimdall-contract` is released under the [MIT License](http://www.opensource.org/licenses/MIT).

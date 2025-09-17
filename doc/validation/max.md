@@ -38,6 +38,6 @@ The `max` validator is applicable only to the `String`, `Array`, and `Number` da
 
 The error message for `max` is dynamic and indicates the minimum limit. For a string, the message is "must have at least {maxCount} characters". For an array, the message is "must have at least {maxCount} elements". For a number, the message is "must be greater than or equal to {maxCount}".
 
-The `i18next` keys for these validation errors are `errors:max.String` for strings, `errors:max.Array` for arrays, and `errors:max.Number` for numbers. For internationalization (i18n), you can provide translations for these keys in your i18n resource bundle.
+When using a `customLocalization` callback, the translation keys for these validation errors are `errors:max.String` for strings, `errors:max.Array` for arrays, and `errors:max.Number` for numbers. For internationalization, you can provide translations for these keys through your `customLocalization` callback.
 
 [back to root](../../README.md#Documentation)

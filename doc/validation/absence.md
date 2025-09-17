@@ -27,8 +27,8 @@ If a function is provided, it will be called with the parameters `(value, contra
 
 The `absence` validator considers a field absent if its value is undefined, null, or an empty string/array depending on the dType.
 
-The error message for `absence` is "must be absent". The i18next key for this validation error is `errors:absence.true` with a fallback to `errors:absence`.
+The error message for `absence` is "must be absent". When using a `customLocalization` callback, the translation keys used are `errors:presence.false`, `errors:absence.true`, and `errors:absence`.
 
-For internationalization (i18n), you can provide translations for these keys in your i18n resource bundle.
+For internationalization, you can provide translations for these keys in your translation system through the `customLocalization` callback.
 
 [back to root](../../README.md#Documentation)

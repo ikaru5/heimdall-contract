@@ -35,8 +35,12 @@ describe("allowBlank breaker", () => {
     }
 
     setConfig() {
-      this.contractConfig.localizationMethod = "i18next"
-      this.contractConfig.i18next = new I18n()
+      const i18n = new I18n()
+      this.contractConfig.customLocalization = ({translationKey, translationKeys, fallbackValue}) => {
+        // For single keys, pass the translationKey; for multiple keys, pass the array
+        const key = (translationKeys && translationKeys.length > 1) ? translationKeys : translationKey
+        return i18n.t(key)
+      }
     }
   }
 

@@ -33,8 +33,8 @@ The presence validator behaves differently based on the `dType` of the field:
 - "Generic": A generic is considered present as long as it's not `undefined` or `null`.
 - "Array": An array is considered present if it's not an empty array.
 
-The error message for `presence` is "not present". The `i18next` key for this validation error is `errors:presence.true` with a fallback to errors:presence.
+The error message for `presence` is "not present". When using a `customLocalization` callback, the translation keys used are `errors:presence.true` with a fallback to `errors:presence`.
 
-For internationalization (i18n), you can provide translations for these keys in your i18n configuration.
+For internationalization, you can provide translations for these keys in your translation system through the `customLocalization` callback.
 
 [back to root](../../README.md#Documentation)

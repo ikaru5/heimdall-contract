@@ -30,6 +30,6 @@ If the value of `fieldName` does not match the returned regular expression, the 
 
 The match validator provides "invalid" as a simple default error message if the field value does not match the specified regular expression.
 
-This message can be localized using the i18next key `errors:generic`.
+This message can be localized using the translation key `errors:generic` through your `customLocalization` callback.
 
 [back to root](../../README.md#Documentation)

@@ -40,6 +40,6 @@ Unlike the `only` validator, the `strictOnly` validator does not consider a fiel
 
 The error message for `strictOnly` is dynamic and indicates the allowed value(s). For a single allowed value, the message is "must be "{allowedValue}". For multiple allowed values, the message is "must be "{value1}", "{value2}", or "{lastValue}".
 
-The i18next keys for these validation errors are `errors:strictOnly.singular` for a single allowed value, and `errors:strictOnly.plural` for multiple allowed values. For internationalization (i18n), you can provide translations for these keys in your i18n resource bundle.
+When using a `customLocalization` callback, the translation keys for these validation errors are `errors:strictOnly.singular` for a single allowed value, and `errors:strictOnly.plural` for multiple allowed values. For internationalization, you can provide translations for these keys through your `customLocalization` callback.
 
 [back to root](../../README.md#Documentation)

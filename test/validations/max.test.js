@@ -66,4 +66,36 @@ describe("max validation", () => {
       valueC: {messages: ["must have less than 3 elements"]},
     })
   })
+
+  it('validates with customLocalization for Array and Number dTypes', () => {
+    class CustomLocalizationContract extends ContractBase {
+      defineSchema() {
+        return {
+          ...super.defineSchema(),
+          ...{
+            arrayField: {dType: "Array", max: 2},
+            numberField: {dType: "Number", max: 5},
+          }
+        }
+      }
+
+      setConfig() {
+        this.contractConfig.customLocalization = ({translationKey, fallbackValue, context}) => {
+          // This will trigger the uncovered lines in validations.js for Array and Number dTypes
+          return `Custom: ${fallbackValue}`
+        }
+      }
+    }
+
+    const testContract = new CustomLocalizationContract()
+
+    testContract.arrayField = [1, 2, 3, 4]  // Too many elements
+    testContract.numberField = 10           // Too large number
+
+    expect(testContract.isValid()).toBe(false)
+    expect(testContract.errors).toStrictEqual({
+      arrayField: {messages: ["Custom: must have less than 2 elements"]},
+      numberField: {messages: ["Custom: must be lower or equal than 5"]},
+    })
+  })
 })

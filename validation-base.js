@@ -191,7 +191,7 @@ const checkBreakers = (instance, validations, propValue, propertyConfiguration, 
 export const getErrorMessageFor = function (propertyValue, propertyConfiguration, dType, depth, validationScope, validationName) {
   if (undefined !== propertyConfiguration.errorMessage) {
     const handleStringResult = (stringResult) => {
-      if (this.contractConfig.tryTranslateMessages && this.contractConfig.localizationMethod === "i18next") return this.contractConfig.i18next.t(stringResult, { defaultValue: stringResult })
+      if (this.contractConfig.tryTranslateMessages && this.contractConfig.customLocalization) return this.contractConfig.customLocalization({translationKey: stringResult, translationKeys: [stringResult], fallbackValue: stringResult, context: {value: propertyValue, dType, depth, contract: this}})
       return stringResult
     }
 
@@ -205,19 +205,13 @@ export const getErrorMessageFor = function (propertyValue, propertyConfiguration
     if ("function" === typeof propertyConfiguration.errorMessage.default) return propertyConfiguration.errorMessage.default(propertyValue, this, validationName, dType, depth, validationScope)
   }
 
-  switch (this.contractConfig.localizationMethod) {
-    case "i18next":
-      return this._validations[validationScope][validationName].i18next(propertyValue, propertyConfiguration[validationName], dType, depth, this, this.contractConfig.i18next)
-    default:
-      return this._validations[validationScope][validationName].message(propertyValue, propertyConfiguration[validationName], dType, depth, this)
-  }
+  return this._validations[validationScope][validationName].message(propertyValue, propertyConfiguration[validationName], dType, depth, this, this.contractConfig.customLocalization)
 }
 
 export const getGenericErrorMessage = function () {
-  switch (this.contractConfig.localizationMethod) {
-    case "i18next":
-      return this.contractConfig.i18next.t("errors:generic")
-    default:
-      return "Field invalid!"
+  if (this.contractConfig.customLocalization) {
+    return this.contractConfig.customLocalization({translationKey: "errors:generic", translationKeys: ["errors:generic"], fallbackValue: "Field invalid!", context: {contract: this}})
+  } else {
+    return "Field invalid!"
   }
 }

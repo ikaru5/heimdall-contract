@@ -2,44 +2,139 @@
 
 # Localization
 
-There are build-in english simple error messages. You can localize this error messages to your needs.
+There are built-in English error messages. You can localize these error messages to your needs using a flexible callback system.
 
-## i18next
+## Custom Localization Callback
 
-The most of the time you want to use i18next for this. You can find more information about i18next [here](https://www.i18next.com/).
-Just tell your base class to use it:
+Heimdall Contract uses a universal callback system for localization. You can integrate any translation library by providing a `customLocalization` function in your base contract.
 
-```Javascript
+### Callback Signature
+
+```javascript
+customLocalization = ({translationKey, translationKeys, fallbackValue, context}) => string | undefined | null
+```
+
+**Parameters:**
+- `translationKey`: Primary translation key (string)
+- `translationKeys`: Array of fallback keys for advanced translation systems (array)
+- `fallbackValue`: Fallback value when no translation is found (string)
+- `context`: Object with context data ({value, dType, config, depth, contract})
+
+### Basic Implementation
+
+```javascript
 export default class Contract extends ContractBase {
   setConfig() {
-    this.contractConfig.localizationMethod = "i18next" // default is "Internal"
-    this.contractConfig.i18next = i18n
+    this.contractConfig.customLocalization = ({translationKey, translationKeys, fallbackValue, context}) => {
+      // Your custom translation logic here
+      // Return translated string, or undefined/null to use fallbackValue
+      return myTranslationLibrary.translate(translationKey) || fallbackValue
+    }
   }
 }
 ```
 
-## Custom localization method
+## i18next Integration
 
-You can also use your own localization method.
+The most common use case is integrating with i18next. Here's how to set it up:
 
-**Warning**: This feature is not final yet. It is ugly to override a private method. So a more elegant solution will be implemented in the future.
+```javascript
+import i18next from 'i18next'
 
-Just override the `_getErrorMessageFor` and `_getGenericErrorMessage` method in your base class:
-
-```Javascript
 export default class Contract extends ContractBase {
   setConfig() {
-    // do not change localizationMethod or i18next config for custom localization method, its simply not needed
-    // this.contractConfig.localizationMethod
-    // this.contractConfig.i18next
+    this.contractConfig.customLocalization = ({translationKey, translationKeys, fallbackValue, context}) => {
+      // Use translationKeys array for i18next fallback support, or single translationKey
+      const key = translationKeys && translationKeys.length > 1 ? translationKeys : translationKey
+      
+      // Pass context data to i18next for interpolation
+      return i18next.t(key, { 
+        defaultValue: fallbackValue,
+        ...context 
+      })
+    }
   }
-  
-  _getErrorMessageFor(propertyValue, propertyConfiguration, dType, depth, validationScope, validationName) {
-    return "Some cool error message"
-  }
+}
+```
 
-  _getGenericErrorMessage() {
-      return "Field invalid!"
+### Translation Keys Used by Heimdall
+
+Heimdall uses the following translation key patterns:
+
+```javascript
+// Data type validation
+"errors:dType.String"
+"errors:dType.Number" 
+"errors:dType.Boolean"
+"errors:dType.default"
+
+// Presence/absence validation
+"errors:presence.true"
+"errors:presence"
+"errors:presence.false"
+"errors:absence.true"
+"errors:absence"
+
+// Email validation
+"errors:isEmail.true"
+"errors:isEmail.false"
+
+// Min/max validation
+"errors:min.String"
+"errors:min.Number"
+"errors:min.Array"
+"errors:max.String" 
+"errors:max.Number"
+"errors:max.Array"
+
+// Only/strictOnly validation
+"errors:only.singular"
+"errors:only.plural"
+"errors:strictOnly.singular"
+"errors:strictOnly.plural"
+
+// Generic fallback
+"errors:generic"
+```
+
+### Example i18next Translation File
+
+```json
+{
+  "errors": {
+    "generic": "Field invalid!",
+    "dType": {
+      "String": "\"{{value}}\" is not a valid String",
+      "Number": "\"{{value}}\" is not a valid Number",
+      "Boolean": "\"{{value}}\" is not a valid Boolean",
+      "default": "\"{{value}}\" has invalid data type"
+    },
+    "presence": {
+      "true": "is required",
+      "": "not present"
+    },
+    "isEmail": {
+      "true": "must be a valid email address",
+      "false": "must not be an email address"
+    },
+    "min": {
+      "String": "must have at least {{minCount}} characters",
+      "Number": "must be greater than or equal to {{minCount}}",
+      "Array": "must have at least {{minCount}} elements"
+    },
+    "max": {
+      "String": "must have less than {{maxCount}} characters", 
+      "Number": "must be lower or equal than {{maxCount}}",
+      "Array": "must have less than {{maxCount}} elements"
+    },
+    "only": {
+      "singular": "must be \"{{element}}\"",
+      "plural": "must be \"{{elements}}\" or \"{{lastElement}}\""
+    },
+    "strictOnly": {
+      "singular": "must be \"{{element}}\"", 
+      "plural": "must be \"{{elements}}\" or \"{{lastElement}}\""
+    }
   }
 }
 ```
@@ -75,13 +170,14 @@ You can also set custom error messages for each field. Just use the `errorMessag
 
 ## Automatic Message Translation
 
-When using i18next as your localization method, Heimdall Contract can automatically translate your custom error messages. This feature is controlled by the `tryTranslateMessages` configuration option (enabled by default).
+When using a `customLocalization` callback, Heimdall Contract can automatically translate your custom error messages. This feature is controlled by the `tryTranslateMessages` configuration option (enabled by default).
 
 ```javascript
 export default class Contract extends ContractBase {
   setConfig() {
-    this.contractConfig.localizationMethod = "i18next"
-    this.contractConfig.i18next = i18n
+    this.contractConfig.customLocalization = ({translationKey, translationKeys, fallbackValue, context}) => {
+      return i18next.t(translationKey, { defaultValue: fallbackValue, ...context })
+    }
     this.contractConfig.tryTranslateMessages = true // default: true
   }
 }
@@ -89,15 +185,15 @@ export default class Contract extends ContractBase {
 
 ### How it works
 
-When `tryTranslateMessages` is enabled and you're using i18next:
+When `tryTranslateMessages` is enabled and you have a `customLocalization` callback:
 
-- **String error messages** will be automatically passed to `i18n.t()` for translation
+- **String error messages** will be automatically passed to your `customLocalization` callback for translation
 - **Function error messages** will NOT be translated (functions are expected to return final messages)
 - **Object error messages** with string values will have their string values translated
 
 ```javascript
 {
-  // This will be translated using i18n.t("custom.error.message")
+  // This will be translated using your customLocalization callback
   fieldA: {dType: "String", presence: true, errorMessage: "custom.error.message"},
   
   // The string values will be translated, but the function will not
@@ -113,11 +209,11 @@ When `tryTranslateMessages` is enabled and you're using i18next:
 
 ### Benefits
 
-- Seamless integration with existing i18next translation keys
-- No need to manually call `i18n.t()` in your error message definitions
+- Universal integration with any translation library through the callback system
+- No need to manually call translation functions in your error message definitions
 - Flexible: you can still use functions for dynamic messages that shouldn't be translated
 - Backward compatible: can be disabled by setting `tryTranslateMessages` to `false`
 
-**Note**: This feature only works when `localizationMethod` is set to "i18next". With other localization methods, custom error messages are used as-is.
+**Note**: This feature only works when you have provided a `customLocalization` callback. Without it, custom error messages are used as-is.
 
 [back to root](../README.md#Documentation)

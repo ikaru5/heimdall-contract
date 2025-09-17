@@ -23,12 +23,15 @@ Create a base class for your contracts:
 ```Javascript
 import ContractBase from "@ikaru5/heimdall-contract"
 
-import i18n from "i18next" // only needed if you want to use i18next to localize your validation messages
+import i18next from "i18next" // only needed if you want to use i18next to localize your validation messages
 
 export default class Contract extends ContractBase {
-  setConfig() { // again only needed if you want to use i18next, but might be useful for other things in the future too
-    this.contractConfig.localizationMethod = "i18next"
-    this.contractConfig.i18next = i18n
+  setConfig() { // optional - useful for setting up localization or other configurations
+    // Set up custom localization callback (e.g., for i18next integration)
+    this.contractConfig.customLocalization = ({translationKey, translationKeys, fallbackValue, context}) => {
+      const key = translationKeys && translationKeys.length > 1 ? translationKeys : translationKey
+      return i18next.t(key, { defaultValue: fallbackValue, ...context })
+    }
   }
 }
 ```

@@ -34,8 +34,7 @@ export default class Contract {
     this._getErrorMessageFor = getErrorMessageFor.bind(this)
 
     this.contractConfig = {
-      i18next: undefined,
-      localizationMethod: "Internal",
+      customLocalization: undefined,
       tryTranslateMessages: true, // If true, will try to use i18n.t on passed messages. Only affects external localization methods.
       ignoreUnderscoredFields: false,
       _nonValidationConfigs: [
@@ -367,13 +366,13 @@ export default class Contract {
   /**
    * Method will be run by nested Contracts on creation, assignment and validation.
    * Following tasks are implemented:
-   *   * Inherit localizationMethod
+   *   * Inherit customLocalization and tryTranslateMessages
    * @param parent Parent contract instance
    * @private
    */
   _parseParent(parent) {
-    this.contractConfig.localizationMethod = parent.contractConfig.localizationMethod
-    this.contractConfig.i18next = parent.contractConfig.i18next
+    this.contractConfig.customLocalization = parent.contractConfig.customLocalization
+    this.contractConfig.tryTranslateMessages = parent.contractConfig.tryTranslateMessages
     this.contractConfig.ignoreUnderscoredFields = parent.contractConfig.ignoreUnderscoredFields
 
     // merge additionalValidations

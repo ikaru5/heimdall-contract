@@ -34,8 +34,11 @@ describe("tryTranslateMessages functionality", () => {
     }
 
     setConfig() {
-      this.contractConfig.localizationMethod = "i18next"
-      this.contractConfig.i18next = new MockI18n()
+      const i18n = new MockI18n()
+      this.contractConfig.customLocalization = ({translationKey, translationKeys, fallbackValue}) => {
+        const key = translationKeys ? translationKeys.join(",") : translationKey
+        return i18n.t(key)
+      }
       this.contractConfig.tryTranslateMessages = true
     }
   }
@@ -53,8 +56,11 @@ describe("tryTranslateMessages functionality", () => {
     }
 
     setConfig() {
-      this.contractConfig.localizationMethod = "i18next"
-      this.contractConfig.i18next = new MockI18n()
+      const i18n = new MockI18n()
+      this.contractConfig.customLocalization = ({translationKey, translationKeys, fallbackValue}) => {
+        const key = translationKeys ? translationKeys.join(",") : translationKey
+        return i18n.t(key)
+      }
       this.contractConfig.tryTranslateMessages = false
     }
   }
@@ -70,7 +76,7 @@ describe("tryTranslateMessages functionality", () => {
     }
 
     setConfig() {
-      this.contractConfig.localizationMethod = "default"
+      this.contractConfig.customLocalization = undefined
       this.contractConfig.tryTranslateMessages = true
     }
   }

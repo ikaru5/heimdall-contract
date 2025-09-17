@@ -9,14 +9,15 @@
  *   @param config - nearly always needed
  *   @param dType - often helpful
  *   @param depth - optional, hopefully never needed
- *   @param contractInstance - optional, hopefully never needed
+ *   @param contract - optional, hopefully never needed
  * To get a better error output instead of just "Field invalid!", a message function can be defined. (Naturally its not for breakers)
  *   message function
  *   @param value - always needed
  *   @param config - nearly always needed
  *   @param dType - often helpful
  *   @param depth - optional, hopefully never needed
- *   @param contractInstance - optional, hopefully never needed
+ *   @param contract - optional, hopefully never needed
+ *   @param customLocalization - like i18next, if provided, will be used instead of the default localization
  */
 export const validationDefinitions = {
   // if these validations passes, normal validations will be skipped
@@ -76,11 +77,16 @@ export const validationDefinitions = {
             return false // should not be reachable unless invalid dType provided
         }
       },
-      message: (value, dataType, dType, depth, contract) => {
+      message: (value, dataType, dType, depth, contract, customLocalization) => {
+        if (customLocalization) {
+          return customLocalization({
+            translationKey: `errors:dType.${dType}`, 
+            translationKeys: [`errors:dType.${dType}`, "errors:dType.default"], 
+            fallbackValue: `"${value}" is not a valid ${dataType}`, 
+            context: {value, dType, depth, contract}
+          })
+        }
         return `"${value}" is not a valid ${dataType}`
-      },
-      i18next: (value, dataType, dType, depth, contract, i18n) => {
-        return i18n.t([`errors:dType.${dType}`, "errors:dType.default"], {value: value, dType: dType})
       },
     },
 
@@ -105,11 +111,16 @@ export const validationDefinitions = {
             return false // should not be reachable unless invalid dType provided
         }
       },
-      message: (value, isRequired, dType, depth, contract) => {
+      message: (value, isRequired, dType, depth, contract, customLocalization) => {
+        if (customLocalization) {
+          return customLocalization({
+            translationKey: "errors:presence.true", 
+            translationKeys: ["errors:presence.true", "errors:presence"], 
+            fallbackValue: "not present", 
+            context: {value, dType, depth, contract}
+          })
+        }
         return "not present"
-      },
-      i18next: (value, isRequired, dType, depth, contract, i18n) => {
-        return i18n.t(["errors:presence.true", "errors:presence"])
       },
     },
 
@@ -121,11 +132,16 @@ export const validationDefinitions = {
 
         return (undefined === value || null === value || 0 === value.length)
       },
-      message: (value, isRequired, dType, depth, contract) => {
+      message: (value, isRequired, dType, depth, contract, customLocalization) => {
+        if (customLocalization) {
+          return customLocalization({
+            translationKey: "errors:presence.false", 
+            translationKeys: ["errors:presence.false", "errors:absence.true", "errors:absence"], 
+            fallbackValue: "must be absent", 
+            context: {value, dType, depth, contract}
+          })
+        }
         return "must be absent"
-      },
-      i18next: (value, isRequired, dType, depth, contract, i18n) => {
-        return i18n.t(["errors:presence.false", "errors:absence.true", "errors:absence"])
       },
     },
 
@@ -136,13 +152,19 @@ export const validationDefinitions = {
         const isEmail = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value)
         return mustBeEmail ? isEmail : !isEmail
       },
-      message: (value, mustBeEmail, dType, depth, contract) => {
+      message: (value, mustBeEmail, dType, depth, contract, customLocalization) => {
         if ("function" === typeof mustBeEmail) mustBeEmail = mustBeEmail(value, contract, dType, depth)
+        if (customLocalization) {
+          const translationKey = mustBeEmail ? "errors:isEmail.true" : "errors:isEmail.false"
+          const fallbackValue = mustBeEmail ? "must be a valid E-Mail" : "must not be an E-Mail"
+          return customLocalization({
+            translationKey: translationKey, 
+            translationKeys: [translationKey], 
+            fallbackValue: fallbackValue, 
+            context: {value, dType, depth, contract}
+          })
+        }
         return mustBeEmail ? "must be a valid E-Mail" : "must not be an E-Mail"
-      },
-      i18next: (value, mustBeEmail, dType, depth, contract, i18n) => {
-        if ("function" === typeof mustBeEmail) mustBeEmail = mustBeEmail(value, contract, dType, depth)
-        return mustBeEmail ? i18n.t("errors:isEmail.true") : i18n.t("errors:isEmail.false")
       },
     },
 
@@ -152,11 +174,16 @@ export const validationDefinitions = {
 
         return regex.test(value)
       },
-      message: (value, regex, dType, depth, contract) => {
+      message: (value, regex, dType, depth, contract, customLocalization) => {
+        if (customLocalization) {
+          return customLocalization({
+            translationKey: "errors:generic", 
+            translationKeys: ["errors:generic"], 
+            fallbackValue: "invalid", 
+            context: {value, dType, depth, contract}
+          })
+        }
         return "invalid"
-      },
-      i18next: (value, mustBeEmail, dType, depth, contract, i18n) => {
-        return i18n.t("errors:generic")
       },
     },
 
@@ -175,22 +202,31 @@ export const validationDefinitions = {
           return allowedValues === value
         }
       },
-      message: (value, allowedValues, dType, depth, contract) => {
+      message: (value, allowedValues, dType, depth, contract, customLocalization) => {
         if ("function" === typeof allowedValues) allowedValues = allowedValues(value, contract, dType, depth)
+        if (customLocalization) {
+          if ("object" === typeof allowedValues && allowedValues.length < 2) allowedValues = allowedValues[0]
+          if ("object" === typeof allowedValues) {
+            return customLocalization({
+              translationKey: "errors:only.plural", 
+              translationKeys: ["errors:only.plural"], 
+              fallbackValue: `must be "${allowedValues.slice(0, -1).join(",")}" or "${allowedValues[allowedValues.length - 1]}"`, 
+              context: {value, dType, depth, contract, elements: allowedValues.slice(0, -1).join(","), lastElement: allowedValues[allowedValues.length - 1]}
+            })
+          } else {
+            return customLocalization({
+              translationKey: "errors:only.singular", 
+              translationKeys: ["errors:only.singular"], 
+              fallbackValue: `must be "${allowedValues}"`, 
+              context: {value, dType, depth, contract, element: allowedValues}
+            })
+          }
+        }
         if (Array.isArray(allowedValues) && allowedValues.length < 2) allowedValues = allowedValues[0]
         if (Array.isArray(allowedValues)) {
           return `must be "${allowedValues.slice(0, -1).join(",")}" or "${allowedValues[allowedValues.length - 1]}"`
         } else {
           return `must be "${allowedValues}"`
-        }
-      },
-      i18next: (value, allowedValues, dType, depth, contract, i18n) => {
-        if ("function" === typeof allowedValues) allowedValues = allowedValues(value, contract, dType, depth)
-        if ("object" === typeof allowedValues && allowedValues.length < 2) allowedValues = allowedValues[0]
-        if ("object" === typeof allowedValues) {
-          return i18n.t("errors:only.plural", {elements: allowedValues.slice(0, -1).join(","), lastElement: allowedValues[allowedValues.length - 1]})
-        } else {
-          return i18n.t("errors:only.singular", {element: allowedValues})
         }
       },
     },
@@ -210,24 +246,31 @@ export const validationDefinitions = {
 
         return allowedValues === value
       },
-      message: (value, allowedValues, dType, depth, contract) => {
+      message: (value, allowedValues, dType, depth, contract, customLocalization) => {
         if ("function" === typeof allowedValues) allowedValues = allowedValues(value, contract, dType, depth)
-
+        if (customLocalization) {
+          if (Array.isArray(allowedValues) && allowedValues.length < 2 && !["Array", "Generic"].includes(dType)) allowedValues = allowedValues[0]
+          if (Array.isArray(allowedValues) && !["Array", "Generic"].includes(dType)) {
+            return customLocalization({
+              translationKey: "errors:strictOnly.plural", 
+              translationKeys: ["errors:strictOnly.plural"], 
+              fallbackValue: `must be "${allowedValues.slice(0, -1).join(",")}" or "${allowedValues[allowedValues.length - 1]}"`, 
+              context: {value, dType, depth, contract, elements: allowedValues.slice(0, -1).join(","), lastElement: allowedValues[allowedValues.length - 1]}
+            })
+          } else {
+            return customLocalization({
+              translationKey: "errors:strictOnly.singular", 
+              translationKeys: ["errors:strictOnly.singular"], 
+              fallbackValue: `must be "${allowedValues}"`, 
+              context: {value, dType, depth, contract, element: allowedValues}
+            })
+          }
+        }
         if (Array.isArray(allowedValues) && allowedValues.length < 2 && !["Array", "Generic"].includes(dType)) allowedValues = allowedValues[0]
         if (Array.isArray(allowedValues) && !["Array", "Generic"].includes(dType)) {
           return `must be "${allowedValues.slice(0, -1).join(",")}" or "${allowedValues[allowedValues.length - 1]}"`
         } else {
           return `must be "${allowedValues}"`
-        }
-      },
-      i18next: (value, allowedValues, dType, depth, contract, i18n) => {
-        if ("function" === typeof allowedValues) allowedValues = allowedValues(value, contract, dType, depth)
-
-        if (Array.isArray(allowedValues) && allowedValues.length < 2 && !["Array", "Generic"].includes(dType)) allowedValues = allowedValues[0]
-        if (Array.isArray(allowedValues) && !["Array", "Generic"].includes(dType)) {
-          return i18n.t("errors:strictOnly.plural", {elements: allowedValues.slice(0, -1).join(","), lastElement: allowedValues[allowedValues.length - 1]})
-        } else {
-          return i18n.t("errors:strictOnly.singular", {element: allowedValues})
         }
       },
     },
@@ -246,15 +289,24 @@ export const validationDefinitions = {
         console.error(`Invalid dType: ${dType} for minimum validation on field '${depth}'`)
         return true
       },
-      message: (value, minCount, dType, depth, contract) => {
+      message: (value, minCount, dType, depth, contract, customLocalization) => {
         if ("function" === typeof minCount) minCount = minCount(value, contract, dType, depth)
+        if (customLocalization) {
+          const translationKey = `errors:min.${dType}`
+          let fallbackValue = ""
+          if ("String" === dType) fallbackValue = `must have at least ${minCount} characters`
+          if ("Array" === dType) fallbackValue = `must have at least ${minCount} elements`
+          if ("Number" === dType) fallbackValue = `must be greater than or equal to ${minCount}`
+          return customLocalization({
+            translationKey: translationKey, 
+            translationKeys: [translationKey], 
+            fallbackValue: fallbackValue, 
+            context: {value, dType, depth, contract, minCount}
+          })
+        }
         if ("String" === dType) return `must have at least ${minCount} characters`
         if ("Array" === dType) return `must have at least ${minCount} elements`
         if ("Number" === dType) return `must be greater than or equal to ${minCount}`
-      },
-      i18next: (value, minCount, dType, depth, contract, i18n) => {
-        if ("function" === typeof minCount) minCount = minCount(value, contract, dType, depth)
-        return i18n.t("errors:min." + dType, {minCount})
       },
     },
 
@@ -270,15 +322,24 @@ export const validationDefinitions = {
         console.error(`Invalid dType: ${dType} for maximum validation on field '${depth}'`)
         return true
       },
-      message: (value, maxCount, dType, depth, contract) => {
+      message: (value, maxCount, dType, depth, contract, customLocalization) => {
         if ("function" === typeof maxCount) maxCount = maxCount(value, contract, dType, depth)
+        if (customLocalization) {
+          const translationKey = `errors:max.${dType}`
+          let fallbackValue = ""
+          if ("String" === dType) fallbackValue = `must have less than ${maxCount} characters`
+          if ("Array" === dType) fallbackValue = `must have less than ${maxCount} elements`
+          if ("Number" === dType) fallbackValue = `must be lower or equal than ${maxCount}`
+          return customLocalization({
+            translationKey: translationKey, 
+            translationKeys: [translationKey], 
+            fallbackValue: fallbackValue, 
+            context: {value, dType, depth, contract, maxCount}
+          })
+        }
         if ("String" === dType) return `must have less than ${maxCount} characters`
         if ("Array" === dType) return `must have less than ${maxCount} elements`
         if ("Number" === dType) return `must be lower or equal than ${maxCount}`
-      },
-      i18next: (value, maxCount, dType, depth, contract, i18n) => {
-        if ("function" === typeof maxCount) maxCount = maxCount(value, contract, dType, depth)
-        return i18n.t("errors:max." + dType, {maxCount})
       },
     },
   }
