@@ -1,0 +1,49 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [24.8.0]
+        
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - run: npm ci
+    
+    - run: npm test
+    
+    - name: Generate Coverage Badge
+      uses: tj-actions/coverage-badge-js@v2
+      with:
+        output_path: coverage-badge.svg
+        
+    - name: Commit Coverage Badge
+      run: |
+        if [ -f "coverage-badge.svg" ]; then
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add coverage-badge.svg
+          if ! git diff --staged --quiet; then
+            git commit -m "[TASK] update coverage badge"
+            git push || echo "Failed to push coverage badge update"
+          else
+            echo "No changes to coverage badge"
+          fi
+        else
+          echo "Coverage badge file not generated, skipping commit"
+        fi

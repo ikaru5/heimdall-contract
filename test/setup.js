@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 global.console = {
   ...console,
   // uncomment to ignore a specific log level

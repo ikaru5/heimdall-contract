@@ -1,5 +1,8 @@
 # Heimdall Contract
 
+[![Tests](https://github.com/ikaru5/heimdall-contract/actions/workflows/test.yml/badge.svg)](https://github.com/ikaru5/heimdall-contract/actions/workflows/test.yml)
+![Coverage Badge](./coverage-badge.svg)
+
 Inheritable and nestable data Objects with intuitive validation schema in your JS-Project.
 Target is to create Contracts like Rubys Trailblazer-Reform for your JS-Frontend like React, Vue or any other JS project (also backend).
 
