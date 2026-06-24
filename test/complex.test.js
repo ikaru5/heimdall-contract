@@ -1,4 +1,4 @@
-import {describe, expect, it} from '@jest/globals';
+import {describe, expect, it, jest} from '@jest/globals';
 import ContractBase from "../index.js"
 
 describe("validation", () => {
@@ -258,5 +258,55 @@ describe("validation", () => {
     expect(signUpContract2.errors).toStrictEqual({})
     expect(signUpContract2.toObject()).toStrictEqual({ username: 'theikarus' })
     expect(signUpContract2._email).toBe(undefined)
+  })
+
+  it("can ignore underscored validations in property configs", () => {
+    const schema = {
+      username: {dType: "String", presence: true, min: 3, _meta: {note: "internal"}}
+    }
+
+    // without the flag the underscored key is treated as an undefined validation
+    const withFlagOff = new ContractBase({schema})
+    const spyOff = jest.spyOn(console, "error").mockImplementation(() => {})
+    withFlagOff.assign({username: "ikarus"})
+    expect(withFlagOff.isValid()).toBe(true)
+    expect(spyOff.mock.calls.flat().some(arg => typeof arg === "string" && arg.includes("_meta"))).toBe(true)
+    spyOff.mockRestore()
+
+    // with the flag the underscored validation key is ignored
+    const withFlagOn = new ContractBase({schema, ignoreUnderscoredFields: true})
+    const spyOn = jest.spyOn(console, "error").mockImplementation(() => {})
+    withFlagOn.assign({username: "ikarus"})
+    expect(withFlagOn.isValid()).toBe(true)
+    expect(spyOn).not.toHaveBeenCalled()
+    spyOn.mockRestore()
+  })
+
+  it("can ignore underscored inner validations of contract arrays", () => {
+    class ItemContract extends ContractBase {
+      defineSchema() {
+        return {name: {dType: "String", presence: true}}
+      }
+    }
+
+    const schema = {
+      items: {dType: "Array", arrayOf: ItemContract, innerValidate: {_meta: "internal"}}
+    }
+
+    // without the flag the underscored inner validation is reported as undefined/invalid
+    const withFlagOff = new ContractBase({schema})
+    const spyOff = jest.spyOn(console, "error").mockImplementation(() => {})
+    withFlagOff.assign({items: [{name: "foo"}]})
+    expect(withFlagOff.isValid()).toBe(true)
+    expect(spyOff.mock.calls.flat().some(arg => typeof arg === "string" && arg.includes("_meta"))).toBe(true)
+    spyOff.mockRestore()
+
+    // with the flag the underscored inner validation key is ignored
+    const withFlagOn = new ContractBase({schema, ignoreUnderscoredFields: true})
+    const spyOn = jest.spyOn(console, "error").mockImplementation(() => {})
+    withFlagOn.assign({items: [{name: "foo"}]})
+    expect(withFlagOn.isValid()).toBe(true)
+    expect(spyOn).not.toHaveBeenCalled()
+    spyOn.mockRestore()
   })
 })

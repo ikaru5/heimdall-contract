@@ -70,7 +70,7 @@ export const validateArray = function (depth, propertyConfiguration, key) {
         const {usedBreakers, outbreaksValidations} = checkBreakers(this, Object.keys(propertyConfiguration.innerValidate), elements[index], propertyConfiguration.innerValidate, "Contract", elementDepth)
         if (outbreaksValidations) continue // if a breakers matched, no need to do further validations
 
-        const remainingValidations = Object.keys(propertyConfiguration.innerValidate).filter(f => !usedBreakers.includes(f))
+        const remainingValidations = Object.keys(propertyConfiguration.innerValidate).filter(f => !usedBreakers.includes(f) && !(this.contractConfig.ignoreUnderscoredFields && f.startsWith("_")))
         for (const validationName of remainingValidations) console.error(`Undefined or invalid validation: ${validationName} at ${elementDepth.join(".")}`)
       }
 
@@ -102,7 +102,7 @@ export const validateArray = function (depth, propertyConfiguration, key) {
  */
 export const validateProperty = function (depth, propertyConfiguration) {
   // get all validation configs for field and return if none exist
-  const validations = Object.keys(propertyConfiguration).filter(f => !this.contractConfig._nonValidationConfigs.includes(f)) // filter out non-validation configs like "default", "as", ...
+  const validations = Object.keys(propertyConfiguration).filter(f => !this.contractConfig._nonValidationConfigs.includes(f) && !(this.contractConfig.ignoreUnderscoredFields && f.startsWith("_"))) // filter out non-validation configs like "default", "as", ... and underscored validations if configured
   // if no validations defined, no need to do something, but this should not happen:
   // validateProperty is called for properties only. Heimdall determines the properties by checking for "dType" in the schema.
   // if there is no "dType" for an entry, validateProperty is not called.

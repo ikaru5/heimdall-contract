@@ -78,6 +78,8 @@ But an error will be written to the console.
 This is a feature to make the schema more flexible and to be able to use it for other purposes. 
 For example, you can use the schema to generate a form and fields like "_label" or "_placeholder" can be helpful.
 
+**Attention**: If you enable the [ignoreUnderscoredFields](configuration.md) option, every keyword starting with an underscore (like "_label" or "_placeholder") is fully ignored and no error will be written to the console.
+
 An example of a generator will be linked in the future.
 
 ## Nesting

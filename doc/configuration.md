@@ -31,4 +31,24 @@ export default class Contract extends ContractBase {
 }
 ```
 
+Another available option is `ignoreUnderscoredFields`, which is `false` by default.
+When set to `true`, Heimdall skips every field whose key starts with an underscore during `assign`, `toObject`, schema definition and validation.
+In addition, validation keywords starting with an underscore inside a field definition (and inside `innerValidate`) are skipped too, so they no longer produce an "Undefined validation" error in the console.
+This is handy for meta keywords like "_label" or "_placeholder" (see [Unknown field definition keywords](schema.md#unknown-field-definition-keywords)).
+
+You can set it in `setConfig` or pass it as a constructor option. It is also inherited by nested contracts.
+
+```Javascript
+import ContractBase from "@ikaru5/heimdall-contract"
+
+export default class Contract extends ContractBase {
+  setConfig() {
+    this.contractConfig.ignoreUnderscoredFields = true // default is false - skips fields and validations whose key starts with "_"
+  }
+}
+
+// or simply pass it as a constructor option
+const contract = new ContractBase({schema, ignoreUnderscoredFields: true})
+```
+
 [back to root](../README.md#Documentation)
