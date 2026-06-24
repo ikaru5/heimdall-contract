@@ -1,4 +1,4 @@
-import {describe, expect, it} from '@jest/globals';
+import {describe, expect, it, jest} from '@jest/globals';
 import ContractBase from "../../index.js"
 
 describe("min validation", () => {
@@ -97,5 +97,36 @@ describe("min validation", () => {
       arrayField: {messages: ["Custom: must have at least 3 elements"]},
       numberField: {messages: ["Custom: must be greater than or equal to 10"]},
     })
+  })
+
+  it('treats empty (null/undefined) values as valid and logs nothing', () => {
+    class EmptyContract extends ContractBase {
+      defineSchema() {
+        return (
+          {
+            ...super.defineSchema(),
+            ...{
+              // Generic lets null pass the dType check, so min is the only possible complainer
+              optional: {dType: "Generic", min: 5},
+              required: {dType: "Generic", min: 5, presence: true},
+            }
+          }
+        )
+      }
+    }
+
+    const spy = jest.spyOn(console, "error").mockImplementation(() => {})
+
+    const testContract = new EmptyContract()
+    spy.mockClear() // scope the assertion to this validation only (ignore output of earlier tests)
+    // both fields are empty (null) by default - min must not complain about them
+    expect(testContract.isValid()).toBe(false) // invalid only because "required" has presence
+    expect(testContract.errors).toStrictEqual({
+      required: {messages: ["not present"]}
+    })
+    // empty values no longer trigger the "Invalid dType ... for minimum validation" console error
+    expect(spy).not.toHaveBeenCalled()
+
+    spy.mockRestore()
   })
 })

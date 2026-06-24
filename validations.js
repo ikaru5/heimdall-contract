@@ -373,6 +373,9 @@ export const validationDefinitions = {
        * @returns {boolean} True if the value meets the minimum requirement
        */
       check: ({value, config: minCount, dType, depth, contract}) => {
+        // empty field validation is not a part of this validation
+        if (undefined === value || null === value) return true
+
         if ("function" === typeof minCount) minCount = minCount(value, contract, dType, depth)
 
         const isComparableString = "String" === dType && "string" === typeof value
@@ -417,6 +420,9 @@ export const validationDefinitions = {
        * @returns {boolean} True if the value meets the maximum requirement
        */
       check: ({value, config: maxCount, dType, depth, contract}) => {
+        // empty field validation is not a part of this validation
+        if (undefined === value || null === value) return true
+
         if ("function" === typeof maxCount) maxCount = maxCount(value, contract, dType, depth)
 
         const isComparableString = "String" === dType && "string" === typeof value

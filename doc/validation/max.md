@@ -2,7 +2,7 @@
 
 # Max Validator
 
-The `max` validation keyword is used to specify a minimum limit for the value of a field. This limit can apply to the length of a string or array, or the value of a number.
+The `max` validation keyword is used to specify a maximum limit for the value of a field. This limit can apply to the length of a string or array, or the value of a number.
 
 ## Usage
 
@@ -22,7 +22,7 @@ In the example above, the `fieldName` field must be a string with 5 or fewer cha
 }
 ```
 
-In the above example, the `fieldName` field must be an array with 3 or fewer elements.
+In the above example, the `fieldName` field must be an array with 2 or fewer elements.
 
 ```javascript
 {
@@ -36,7 +36,7 @@ In the above example, the `fieldName` field must be a number less than or equal 
 
 The `max` validator is applicable only to the `String`, `Array`, and `Number` data types.
 
-The error message for `max` is dynamic and indicates the minimum limit. For a string, the message is "must have at least {maxCount} characters". For an array, the message is "must have at least {maxCount} elements". For a number, the message is "must be greater than or equal to {maxCount}".
+The error message for `max` is dynamic and indicates the maximum limit. For a string, the message is "must have less than {maxCount} characters". For an array, the message is "must have less than {maxCount} elements". For a number, the message is "must be lower or equal than {maxCount}".
 
 When using a `customLocalization` callback, the translation keys for these validation errors are `errors:max.String` for strings, `errors:max.Array` for arrays, and `errors:max.Number` for numbers. For internationalization, you can provide translations for these keys through your `customLocalization` callback.
 
