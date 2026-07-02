@@ -118,6 +118,7 @@ Inherit from your base class and define your contracts! Have Fun!
 
 # Documentation
 
+- [Changelog](CHANGELOG.md)
 - [Installation & Getting Started](doc/getting_started.md)
 - [General Usage](doc/general_usage.md)
 - [TypeScript](doc/typescript.md)
@@ -210,16 +211,19 @@ contextContract.isValid() // context = undefined
 contextContract.isValid("matchAnyContext") // magic context to match all contexts
 ```
 
-## Development
+## Roadmap
 
-- [x] implement arrays of mixed types
-- [x] add beautiful custom localization
-- [x] switch from (value, isRequired, dType, depth, contract) to ({value, isRequired, dType, depth, contract}) in validations
-- [x] add example for i18next
-- [x] add JSDoc
-- [x] strict schema linting with SchemaError
-- [x] add TS types
-- [x] Zod-like type inference via contractClass factory
+Heimdall Contract is feature complete for its core mission. On the way to 1.0:
+
+- [ ] battle testing the strict schema linting and type inference in real projects
+- [ ] freezing the public API (validation semantics and the errors object shape are already documented as intended)
+
+Ideas beyond 1.0:
+
+- typed `assign()` input
+- a helper for flattening the errors object into a list of `{path, messages}` entries
+
+All notable changes are tracked in the [Changelog](CHANGELOG.md).
 
 ## Contributing
 

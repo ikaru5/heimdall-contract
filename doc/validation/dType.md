@@ -25,7 +25,6 @@ class TestContract extends ContractBase {
             arrayOf: "String" // can also be a contract like {dType: "Array", arrayOf: SomeContract}
           },
           valueF: {dType: "Contract", contract: SomeContract},
-          valueG: {dType: "Invalid"},
         }
       }
     )
@@ -48,5 +47,24 @@ The following data types are supported:
 - "Generic": Any value is accepted.
 - "Array": The value must be an array. The type of the array elements is specified through the `arrayOf` property (required).
 - "Contract": The value is a nested contract. The contract type is specified through the `contract` property (required).
+
+## Empty Values
+
+Unassigned fields hold their default empty value - and whether that passes the dType validation differs by type. **This is intentional**: a schema declares what a valid value looks like, and an empty contract simply does not satisfy a schema that demands a Number or a Boolean.
+
+| dType | empty value | passes dType validation |
+| --- | --- | --- |
+| String | `""` | yes |
+| Number | `null` | **no** - `"null" is not a valid Number` |
+| Boolean | `undefined` | **no** - `"undefined" is not a valid Boolean` |
+| Generic | `null` | yes |
+| Array | `[]` | yes |
+
+If a Number or Boolean field is allowed to stay empty, say so in the schema - either with [allowBlank](allowBlank.md) (skips all validations for empty values) or with a `default` (the field then always holds a real value):
+
+```javascript
+age: {dType: "Number", allowBlank: true},
+newsletter: {dType: "Boolean", default: false},
+```
 
 [back to root](../../README.md#Documentation)
