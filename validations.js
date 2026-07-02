@@ -6,28 +6,15 @@
  *   - normal   -  Standard validations; if one fails, the field is considered invalid.
  * 
  * Each validation requires a "check" function that uses destructured named parameters:
- *
- * @typedef {Object} CheckParams
- * @property {*} value - The value being validated (always provided)
- * @property {*} config - The validation configuration (nearly always needed)
- * @property {string} dType - The data type (often helpful for type-specific validation)
- * @property {Array<string>} depth - The field path depth (optional, used for nested objects)
- * @property {Object} contract - The contract instance (optional, provides context)
- *
  * check function signature: ({value, config, dType, depth, contract}) => boolean
  *
  * For better error messages instead of generic "Field invalid!", a message function can be defined.
  * Note: Message functions are not used for breaker validations.
- *
- * @typedef {Object} MessageParams
- * @property {*} value - The value being validated (always provided)
- * @property {*} config - The validation configuration (nearly always needed)
- * @property {string} dType - The data type (often helpful for type-specific messages)
- * @property {Array<string>} depth - The field path depth (optional, used for nested objects)
- * @property {Object} contract - The contract instance (optional, provides context)
- * @property {Function} customLocalization - Custom localization function (optional, like i18next)
- *
  * message function signature: ({value, config, dType, depth, contract, customLocalization}) => string
+ *
+ * The parameter types live handwritten in types.d.ts:
+ * @typedef {import('./types.js').CheckParams} CheckParams
+ * @typedef {import('./types.js').MessageParams} MessageParams
  */
 export const validationDefinitions = {
   // if these validations passes, normal validations will be skipped

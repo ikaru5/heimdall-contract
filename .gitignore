@@ -2,3 +2,9 @@
 /.idea
 .idea
 /coverage
+
+# generated declaration files (npm run build:types) - types.d.ts is handwritten and stays tracked
+/index.d.ts
+/validation-base.d.ts
+/validations.d.ts
+/schema-lint.d.ts

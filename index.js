@@ -5,10 +5,15 @@ import { validationDefinitions as baseValidationDefinitions } from "./validation
 export { SchemaError }
 
 /**
- * @typedef Options
- * @property {object} [schema] - set schema through constructor for little inline contracts for example
- * @property {function} [initNested] - passed hook for internal use only; will be called after own init
- * @property {function} [initAll] - passed hook for internal use only; will be called after own initNested
+ * The type vocabulary lives handwritten in types.d.ts - see doc/typescript.md
+ * @typedef {import('./types.js').Options} Options
+ * @typedef {import('./types.js').Schema} Schema
+ * @typedef {import('./types.js').PropertyDefinition} PropertyDefinition
+ * @typedef {import('./types.js').Dtype} Dtype
+ * @typedef {import('./types.js').ContractConfig} ContractConfig
+ * @typedef {import('./types.js').AdditionalValidations} AdditionalValidations
+ * @typedef {import('./types.js').ValidationErrors} ValidationErrors
+ * @typedef {import('./types.js').ContractClass} ContractClass
  */
 
 /**
@@ -26,19 +31,28 @@ export default class Contract {
 
   /**
    * Heimdall Contract
-   * @param {Options} options
+   * @param {Options} [options]
    */
   constructor(options = undefined) {
     // validation logic bound to the contract instance
+    /** @private @type {(schema?: Schema, depth?: Array<string>) => void} */
     this._validate = validate.bind(this)
+    /** @private @type {(depth: Array<string>, propertyConfiguration: PropertyDefinition, key: string) => void} */
     this._validateArray = validateArray.bind(this)
+    /** @private @type {(depth: Array<string>, propertyConfiguration: PropertyDefinition) => void} */
     this._validateProperty = validateProperty.bind(this)
+    /** @private @type {() => string} */
     this._getGenericErrorMessage = getGenericErrorMessage.bind(this)
+    /** @private @type {(propertyValue: *, propertyConfiguration: PropertyDefinition, dType: Dtype, depth: Array<string>, validationScope: "normal" | "breaker", validationName: string) => string} */
     this._getErrorMessageFor = getErrorMessageFor.bind(this)
+    /** @private @type {(schema: Schema, depth: Array<string>, problems: Array<string>) => Array<string>} */
     this._lintSchemaStructure = lintSchemaStructure.bind(this)
+    /** @private @type {(schema: Schema, depth: Array<string>, problems: Array<string>) => Array<string>} */
     this._lintSchemaKeywords = lintSchemaKeywords.bind(this)
+    /** @private @type {(problems: Array<string>) => void} */
     this._reportSchemaProblems = reportSchemaProblems.bind(this)
 
+    /** @type {ContractConfig} */
     this.contractConfig = {
       customLocalization: undefined,
       tryTranslateMessages: true, // If true, will try to use i18n.t on passed messages. Only affects external localization methods.
@@ -58,15 +72,13 @@ export default class Contract {
     this._setValidations()
 
     // it is possible to set the schema in the constructor options -> small inline contracts for example
-    if (options?.schema) {
-      this.schema = options.schema
-    } else {
-      this.schema = this.defineSchema()
-    }
+    /** @type {Schema} */
+    this.schema = options?.schema ? options.schema : this.defineSchema()
 
     // structural schema lint - keywords are linted later on isValid, when inherited validations are known
     this._reportSchemaProblems(this._lintSchemaStructure(this.schema, [], []))
 
+    /** @type {ValidationErrors} */
     this.errors = {}
     this.init()
     if ("function" === typeof options?.initNested) {
@@ -83,7 +95,8 @@ export default class Contract {
 
   /**
    * Return schema so the constructor can set it.
-   * @returns {object}
+   * Override this method to define the fields of your contract - see doc/schema.md
+   * @returns {Schema}
    */
   defineSchema() {
     return (
@@ -93,11 +106,9 @@ export default class Contract {
 
   /**
    * Hook method to add custom validations to the contract.
-   * Override this method to add custom validation rules.
-   * @param {Object} validations - Custom validations object
-   * @param {Object} validations.breaker - Breaker validations that can skip remaining validations
-   * @param {Object} validations.normal - Normal validations that run after breakers
-   * @returns {Object} The validations object with custom validation definitions
+   * Override this method to add custom validation rules - see doc/validation/additionalValidations.md
+   * @param {AdditionalValidations} [validations] - Custom validations grouped into breaker and normal
+   * @returns {AdditionalValidations} The validations object with custom validation definitions
    */
   addAdditionalValidations(validations = { breaker: {}, normal: {} }) {
     return validations
@@ -122,7 +133,7 @@ export default class Contract {
 
   /**
    * Is contract valid?
-   * @param context
+   * @param {string | Array<string>} [context] - validation context(s), see doc/validation/on.md
    * @returns {boolean}
    * @throws {SchemaError} if the schema uses unknown validation keywords and strictSchema is enabled
    */
@@ -143,10 +154,10 @@ export default class Contract {
 
   /**
    * Helper to assign a corresponding Object.
-   * @param inputObject
-   * @param _depth - private - used for recursion
-   * @param _parsedDepth - private - used for recursion
-   * @param _currentScope - private - used for recursion
+   * @param {*} inputObject - nested data, e.g. from your API or state management
+   * @param {Array<string>} [_depth] - private - used for recursion
+   * @param {Array<string>} [_parsedDepth] - private - used for recursion
+   * @param {Schema} [_currentScope] - private - used for recursion
    */
   assign(inputObject, _depth = [], _parsedDepth = [], _currentScope = this.schema) {
     // skip empty assignment
@@ -246,9 +257,9 @@ export default class Contract {
   /**
    * Returns clean Object with filled data for sending, according to contract schema.
    * Not safe if not validated before!
-   * @param _depth
-   * @param _currentScope
-   * @returns {{}}
+   * @param {Array<string>} [_depth] - private - used for recursion
+   * @param {Schema} [_currentScope] - private - used for recursion
+   * @returns {Record<string, *>}
    */
   toObject(_depth = [], _currentScope = this.schema) {
     const out = {}

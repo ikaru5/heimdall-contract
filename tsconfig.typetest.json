@@ -1,0 +1,12 @@
+{
+  "include": ["typetest/**/*.ts"],
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": false,
+    "target": "es2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "strict": true,
+    "skipLibCheck": true
+  }
+}

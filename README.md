@@ -120,6 +120,7 @@ Inherit from your base class and define your contracts! Have Fun!
 
 - [Installation & Getting Started](doc/getting_started.md)
 - [General Usage](doc/general_usage.md)
+- [TypeScript](doc/typescript.md)
 - [Configuration](doc/configuration.md)
 - [API](doc/api.md)
   - [Hooks](doc/api.md#hooks)
@@ -216,7 +217,7 @@ contextContract.isValid("matchAnyContext") // magic context to match all context
 - [x] add example for i18next
 - [x] add JSDoc
 - [x] strict schema linting with SchemaError
-- [ ] add TS types
+- [x] add TS types
 
 ## Contributing
 

@@ -1,0 +1,15 @@
+{
+  "include": ["index.js", "validation-base.js", "validations.js", "schema-lint.js", "types.d.ts"],
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "removeComments": false,
+    "target": "es2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "strict": true,
+    "skipLibCheck": true
+  }
+}
