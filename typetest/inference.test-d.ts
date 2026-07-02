@@ -46,6 +46,38 @@ const deeper: boolean | undefined = contract.nested.deeper
 const valid: boolean = contract.isValid()
 contract.address.isValid()
 
+// ---------------------------------------------------------------------------------------
+// toObject() is inferred including nested contracts and key remapping
+// ---------------------------------------------------------------------------------------
+
+const rendered = contract.toObject()
+const renderedEmail: string = rendered.email
+const renderedAge: number | null = rendered.age
+const renderedTags: Array<string> = rendered.tags
+const renderedAddress: {street: string, city: string} = rendered.address
+const renderedAddresses: Array<{street: string, city: string}> = rendered.addresses
+const renderedInlinePlz: string = rendered.inline.plz
+const renderedDeeper: boolean | undefined = rendered.nested.deeper
+
+// @ts-expect-error - rendered email is a string, not a number
+const renderedWrong: number = rendered.email
+
+// renderAs and as remap the output keys, renderAs wins over as
+const RemappedContract = contractClass({
+  internal: {dType: "String", renderAs: "external"},
+  aliased: {dType: "Number", as: "wire", default: 0},
+  both: {dType: "String", as: "asKey", renderAs: "renderKey"},
+  multi: {dType: "String", renderAs: ["primary", "fallback"] as const},
+})
+const remapped = new RemappedContract().toObject()
+const external: string = remapped.external
+const wire: number = remapped.wire
+const renderKey: string = remapped.renderKey
+const primary: string = remapped.primary
+
+// @ts-expect-error - the schema key is remapped away in the output
+remapped.internal
+
 // @ts-expect-error - email is a string, not a number
 const wrongFieldType: number = contract.email
 
@@ -81,6 +113,11 @@ const EmployeeContract = contractClass({staffId: {dType: "Number"}}, SignupContr
 const employee = new EmployeeContract()
 const employeeEmail: string = employee.email
 const staffId: number | null = employee.staffId
+
+// toObject() merges the rendered types across the inheritance chain
+const employeeRendered = employee.toObject()
+const employeeRenderedStaffId: number | null = employeeRendered.staffId
+const employeeRenderedEmail: string = employeeRendered.email
 
 // extending the returned class keeps fields and allows custom members
 class ExtendedContract extends contractClass({name: {dType: "String"}}) {

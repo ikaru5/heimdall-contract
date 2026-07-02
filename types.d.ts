@@ -109,11 +109,11 @@ export interface PropertyDefinition {
   /** Contract class or inline schema of a nested contract - required for dType "Contract". */
   contract?: ContractClass | Schema
   /** Key mapping for assign() and toObject() - see doc/schema.md */
-  as?: string | Array<string>
+  as?: string | ReadonlyArray<string>
   /** Key mapping for assign() only - see doc/schema.md */
-  parseAs?: string | Array<string>
+  parseAs?: string | ReadonlyArray<string>
   /** Key mapping for toObject() only - see doc/schema.md */
-  renderAs?: string | Array<string>
+  renderAs?: string | ReadonlyArray<string>
 
   /** Meta keywords for external tooling, skipped by heimdall when ignoreUnderscoredFields is enabled. */
   [metaKeyword: `_${string}`]: unknown
@@ -264,6 +264,81 @@ type InferNested<C> =
   C extends ContractClass ? InstanceType<C> :
   C extends Schema ? Contract & InferContract<C> :
   never
+
+/**
+ * Derives the return type of toObject() from a schema, including the key remapping
+ * through renderAs and as (renderAs wins, matching the runtime).
+ *
+ * For the array form of renderAs/as the first key is used at runtime - the type can
+ * only reflect that when the array keeps its tuple form, so declare it `as const`
+ * (e.g. renderAs: ["primary", "fallback"] as const). A plain array degrades the key
+ * to a string index signature.
+ */
+export type InferObject<S extends Schema> = {
+  [K in keyof S as RenderKey<K, S[K]>]: InferObjectField<S[K]>
+}
+
+/** Derives the output key of a schema node: renderAs, then as, then the schema key. */
+type RenderKey<K, F> =
+  F extends {renderAs: infer R} ? FirstKey<R, K> :
+  F extends {as: infer R} ? FirstKey<R, K> :
+  K
+
+/** Resolves a key mapping config to a single key: a string, the first tuple element or a string index. */
+type FirstKey<R, K> =
+  R extends string ? R :
+  R extends readonly [infer First extends string, ...Array<unknown>] ? First :
+  R extends ReadonlyArray<string> ? string :
+  K
+
+/** Derives the rendered type of a single schema node - the toObject counterpart of InferField. */
+type InferObjectField<F> =
+  F extends {dType: "String"} ? string :
+  F extends {dType: "Number"} ? (F extends {default: number} ? number : number | null) :
+  F extends {dType: "Boolean"} ? (F extends {default: boolean} ? boolean : boolean | undefined) :
+  F extends {dType: "Generic"} ? any :
+  F extends {dType: "Array", arrayOf: infer A} ? Array<InferObjectElement<A>> :
+  F extends {dType: "Array"} ? Array<unknown> :
+  F extends {dType: "Contract", contract: infer C} ? InferNestedObject<C> :
+  F extends Schema ? InferObject<F> :
+  never
+
+/** Derives the rendered element type of an arrayOf config. */
+type InferObjectElement<A> =
+  A extends "String" ? string :
+  A extends "Number" ? number :
+  A extends "Boolean" ? boolean :
+  A extends "Generic" ? any :
+  A extends ContractClass ? ContractObject<InstanceType<A>> :
+  A extends ReadonlyArray<infer E> ? InferObjectElement<E> :
+  A extends Schema ? InferObject<A> :
+  unknown
+
+/** Derives the rendered type of a nested contract config. */
+type InferNestedObject<C> =
+  C extends ContractClass ? ContractObject<InstanceType<C>> :
+  C extends Schema ? InferObject<C> :
+  never
+
+declare const objectType: unique symbol
+
+/**
+ * Type level brand carrying the precise toObject() return type of an inference-built contract.
+ * The symbol keyed member never exists at runtime - it only lets ContractObject recover the
+ * object type of nested contracts, which can not be inferred from the overloaded toObject member.
+ */
+export interface ObjectTypeBrand<O> {
+  readonly [objectType]?: O
+}
+
+/** The toObject() return type of a contract instance - precise for inference-built contracts. */
+export type ContractObject<T> =
+  T extends ObjectTypeBrand<infer O>
+    ? (unknown extends O ? FallbackObject<T> : NonNullable<O>)
+    : FallbackObject<T>
+
+/** Fallback for contracts without the brand: their declared toObject() return type. */
+type FallbackObject<T> = T extends {toObject(): infer O} ? O : Record<string, unknown>
 
 /**
  * Compile time schema linting for inference entry points like contractClass.

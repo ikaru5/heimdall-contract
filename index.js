@@ -260,7 +260,7 @@ export default class Contract {
    * Not safe if not validated before!
    * @param {Array<string>} [_depth] - private - used for recursion
    * @param {Schema} [_currentScope] - private - used for recursion
-   * @returns {Record<string, *>}
+   * @returns {Record<string, unknown>}
    */
   toObject(_depth = [], _currentScope = this.schema) {
     const out = {}

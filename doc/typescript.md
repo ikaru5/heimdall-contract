@@ -113,6 +113,35 @@ class SignupContract extends contractClass({email: {dType: "String", isEmail: tr
 }
 ```
 
+### Typed toObject()
+
+For factory built contracts the return type of `toObject()` is inferred as well, including the
+key remapping through `renderAs` and `as` (`renderAs` wins, matching the runtime) and the rendered
+types of nested contracts:
+
+```typescript
+const ProductContract = contractClass({
+  name: {dType: "String", presence: true},
+  price: {dType: "Number", as: "priceCents", default: 0},
+  internalNote: {dType: "String", renderAs: "note"},
+})
+
+const rendered = new ProductContract().toObject()
+rendered.name        // string
+rendered.priceCents  // number - remapped by "as", narrowed by the default
+rendered.note        // string - remapped by "renderAs"
+rendered.internalNote // compile error - the schema key does not exist in the output
+```
+
+For the array form of `renderAs`/`as` the runtime renders under the first key. The types can only
+see that when the array keeps its tuple form, so declare it `as const`:
+
+```typescript
+{dType: "String", renderAs: ["primary", "fallback"] as const} // output key: "primary"
+```
+
+Without `as const` the key degrades to a string index signature.
+
 ### Inference with handwritten classes
 
 If you want to keep the classic class pattern and still get inference, extract the schema into a
@@ -137,7 +166,8 @@ class ProfileContract extends ContractBase {
 
 ### Current limits
 
-- `toObject()` stays `Record<string, unknown>` - key remapping via `as`/`renderAs` is not reflected yet.
+- `assign()` input stays untyped (`any`) - it is intentionally permissive: partial data, `parseAs` keys and unknown keys are all valid input.
+- When a factory contract inherits from a handwritten class, the fields of that base render as `Record<string, unknown>` in the `toObject()` type - only inference-built parts are precise.
 
 ## Custom Validations
 
