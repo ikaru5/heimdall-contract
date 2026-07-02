@@ -81,11 +81,14 @@ default empty value:
 | dType | inferred type |
 | --- | --- |
 | `String` | `string` |
-| `Number` | `number \| null` |
-| `Boolean` | `boolean \| undefined` |
+| `Number` | `number \| null` (`number` with a number `default`) |
+| `Boolean` | `boolean \| undefined` (`boolean` with a boolean `default`) |
 | `Generic` | `any` |
 | `Array` | `Array<element type>` |
 | `Contract` | the nested contract instance type |
+
+A field with a matching `default` can never hold its empty value, so the empty type is removed
+from the union - `agb: {dType: "Boolean", default: false}` infers plain `boolean`.
 
 Schema typos are compile errors at the factory boundary (and still runtime `SchemaError`s for
 JavaScript users): unknown keywords are caught by the `ValidateSchema` guard type, invalid values
@@ -133,7 +136,6 @@ class ProfileContract extends ContractBase {
 ### Current limits
 
 - `toObject()` stays `Record<string, unknown>` - key remapping via `as`/`renderAs` is not reflected yet.
-- A `default` value does not narrow the type (e.g. a Boolean with `default: false` is still typed `boolean | undefined`).
 - Keyword typos inside `innerValidate` are only caught at runtime by the schema lint, not at compile time.
 
 ## Custom Validations

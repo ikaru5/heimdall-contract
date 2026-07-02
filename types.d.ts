@@ -232,11 +232,15 @@ export type InferContract<S extends Schema> = {
   [K in keyof S]: InferField<S[K]>
 }
 
-/** Derives the type of a single schema node: a field definition or a nested schema object. */
+/**
+ * Derives the type of a single schema node: a field definition or a nested schema object.
+ * A field with a matching default value can never hold its empty value, so the
+ * empty type (null for Number, undefined for Boolean) is removed from the union.
+ */
 type InferField<F> =
   F extends {dType: "String"} ? string :
-  F extends {dType: "Number"} ? number | null :
-  F extends {dType: "Boolean"} ? boolean | undefined :
+  F extends {dType: "Number"} ? (F extends {default: number} ? number : number | null) :
+  F extends {dType: "Boolean"} ? (F extends {default: boolean} ? boolean : boolean | undefined) :
   F extends {dType: "Generic"} ? any :
   F extends {dType: "Array", arrayOf: infer A} ? Array<InferElement<A>> :
   F extends {dType: "Array"} ? Array<unknown> :

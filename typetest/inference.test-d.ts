@@ -53,6 +53,27 @@ const wrongFieldType: number = contract.email
 contract.doesNotExist
 
 // ---------------------------------------------------------------------------------------
+// default values narrow the inferred type: the empty value can never occur
+// ---------------------------------------------------------------------------------------
+
+const WithDefaults = contractClass({
+  agb: {dType: "Boolean", default: false, only: true},
+  count: {dType: "Number", default: 0},
+  plainFlag: {dType: "Boolean"},
+  nullDefault: {dType: "Number", default: null},
+})
+const withDefaults = new WithDefaults()
+
+const agb: boolean = withDefaults.agb     // narrowed - no undefined
+const count: number = withDefaults.count  // narrowed - no null
+
+// @ts-expect-error - without a default, undefined stays in the union
+const plainFlag: boolean = withDefaults.plainFlag
+
+// @ts-expect-error - a null default is not a number and does not narrow
+const nullDefault: number = withDefaults.nullDefault
+
+// ---------------------------------------------------------------------------------------
 // contractClass: inheritance via base class merges the inferred fields
 // ---------------------------------------------------------------------------------------
 
