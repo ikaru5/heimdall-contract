@@ -278,7 +278,29 @@ export type ValidateSchema<S> = {
   [K in keyof S]: S[K] extends {dType: any} ? ValidateField<S[K]> : ValidateSchema<S[K]>
 }
 
-/** Maps unknown keywords of a field definition to never - see ValidateSchema. */
+/**
+ * Maps unknown keywords of a field definition to never - see ValidateSchema.
+ * The keywords of an innerValidate config are checked recursively, mirroring the
+ * runtime keyword lint: arrays of basic types support the full validation set,
+ * contract arrays only breakers and validateIf.
+ */
 type ValidateField<F> = {
-  [K in keyof F]: K extends keyof PropertyDefinition ? F[K] : never
+  [K in keyof F]:
+    K extends "innerValidate" ? ValidateInnerValidate<F[K], F extends {arrayOf: infer A} ? A : undefined> :
+    K extends keyof PropertyDefinition ? F[K] :
+    never
+}
+
+/** Dispatches the innerValidate keyword check by the arrayOf form - see ValidateField. */
+type ValidateInnerValidate<I, A> =
+  A extends BasicDtype | ReadonlyArray<BasicDtype>
+    ? ValidateField<I>
+    : ValidateBreakersOnly<I>
+
+/** Contract arrays support only breakers in innerValidate - everything else maps to never. */
+type ValidateBreakersOnly<I> = {
+  [K in keyof I]:
+    K extends "allowBlank" | "on" | "validateIf" ? I[K] :
+    K extends `_${string}` ? I[K] :
+    never
 }

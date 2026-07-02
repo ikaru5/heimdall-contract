@@ -121,4 +121,15 @@ contractClass({email: {dType: "String", presense: true}})
 // @ts-expect-error - invalid dType
 contractClass({email: {dType: "Strng"}})
 
+// innerValidate keywords are checked like the runtime keyword lint does
+contractClass({tags: {dType: "Array", arrayOf: "String", innerValidate: {min: 2, presence: true, validate: () => true, _meta: "x"}}})
+contractClass({mixed: {dType: "Array", arrayOf: ["String", "Number"], innerValidate: {min: 1}}})
+contractClass({items: {dType: "Array", arrayOf: AddressContract, innerValidate: {allowBlank: true, on: "ctx", validateIf: () => true, _meta: "x"}}})
+
+// @ts-expect-error - typo inside innerValidate of a basic array
+contractClass({tags: {dType: "Array", arrayOf: "String", innerValidate: {mim: 2}}})
+
+// @ts-expect-error - normal validations are not supported in innerValidate of contract arrays
+contractClass({items: {dType: "Array", arrayOf: AddressContract, innerValidate: {min: 2}}})
+
 export {}

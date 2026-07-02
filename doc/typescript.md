@@ -92,7 +92,9 @@ from the union - `agb: {dType: "Boolean", default: false}` infers plain `boolean
 
 Schema typos are compile errors at the factory boundary (and still runtime `SchemaError`s for
 JavaScript users): unknown keywords are caught by the `ValidateSchema` guard type, invalid values
-like `dType: "Strng"` by the schema types themselves.
+like `dType: "Strng"` by the schema types themselves. This includes the keywords inside
+`innerValidate`, mirroring the runtime keyword lint - arrays of basic types support the full
+validation set, contract arrays only breakers (`allowBlank`, `on`, `validateIf`).
 
 Inheritance works through the second argument instead of `super.defineSchema()` spreading:
 
@@ -136,7 +138,6 @@ class ProfileContract extends ContractBase {
 ### Current limits
 
 - `toObject()` stays `Record<string, unknown>` - key remapping via `as`/`renderAs` is not reflected yet.
-- Keyword typos inside `innerValidate` are only caught at runtime by the schema lint, not at compile time.
 
 ## Custom Validations
 
