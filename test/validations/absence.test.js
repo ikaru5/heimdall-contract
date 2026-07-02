@@ -15,8 +15,8 @@ describe("absence validation", () => {
             valueD: {dType: "Number", absence: true},
             valueE: {dType: "Boolean", absence: true},
             valueF: {dType: "Generic", absence: true},
-            valueG: {dType: "Array", absence: true},
-            valueH: {dType: "Array", absence: true}
+            valueG: {dType: "Array", arrayOf: "Generic", absence: true},
+            valueH: {dType: "Array", arrayOf: "Generic", absence: true}
           }
         }
       )

@@ -125,6 +125,7 @@ Inherit from your base class and define your contracts! Have Fun!
   - [Hooks](doc/api.md#hooks)
   - [Inheritance](doc/api.md#inheritance)
 - [Schema](doc/schema.md)
+  - [Schema Linting](doc/schema.md#schema-linting)
 - [Mixed type Arrays](doc/mixed_type_arrays.md)
 - [Validation](doc/validation.md)
     - [Breaker](doc/validation.md#validation-breakers)
@@ -214,6 +215,7 @@ contextContract.isValid("matchAnyContext") // magic context to match all context
 - [x] switch from (value, isRequired, dType, depth, contract) to ({value, isRequired, dType, depth, contract}) in validations
 - [x] add example for i18next
 - [x] add JSDoc
+- [x] strict schema linting with SchemaError
 - [ ] add TS types
 
 ## Contributing

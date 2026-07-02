@@ -1,5 +1,8 @@
 import {getErrorMessageFor, getGenericErrorMessage, validate, validateArray, validateProperty} from "./validation-base.js";
+import {lintSchemaKeywords, lintSchemaStructure, reportSchemaProblems, SchemaError} from "./schema-lint.js"
 import { validationDefinitions as baseValidationDefinitions } from "./validations.js"
+
+export { SchemaError }
 
 /**
  * @typedef Options
@@ -32,11 +35,15 @@ export default class Contract {
     this._validateProperty = validateProperty.bind(this)
     this._getGenericErrorMessage = getGenericErrorMessage.bind(this)
     this._getErrorMessageFor = getErrorMessageFor.bind(this)
+    this._lintSchemaStructure = lintSchemaStructure.bind(this)
+    this._lintSchemaKeywords = lintSchemaKeywords.bind(this)
+    this._reportSchemaProblems = reportSchemaProblems.bind(this)
 
     this.contractConfig = {
       customLocalization: undefined,
       tryTranslateMessages: true, // If true, will try to use i18n.t on passed messages. Only affects external localization methods.
       ignoreUnderscoredFields: false,
+      strictSchema: true, // If true, schema problems throw a SchemaError. If false, they are logged to the console instead.
       _nonValidationConfigs: [
         "default", "errorMessage", "arrayOf", "innerValidate", "contract", "as", "parseAs", "renderAs"
       ]
@@ -44,7 +51,9 @@ export default class Contract {
     this.setConfig()
     if (options && Object.keys(options).includes("ignoreUnderscoredFields"))
       this.contractConfig.ignoreUnderscoredFields = options["ignoreUnderscoredFields"]
-    
+    if (options && Object.keys(options).includes("strictSchema"))
+      this.contractConfig.strictSchema = options["strictSchema"]
+
     this._additionalValidations = this.addAdditionalValidations()
     this._setValidations()
 
@@ -54,6 +63,9 @@ export default class Contract {
     } else {
       this.schema = this.defineSchema()
     }
+
+    // structural schema lint - keywords are linted later on isValid, when inherited validations are known
+    this._reportSchemaProblems(this._lintSchemaStructure(this.schema, [], []))
 
     this.errors = {}
     this.init()
@@ -112,8 +124,16 @@ export default class Contract {
    * Is contract valid?
    * @param context
    * @returns {boolean}
+   * @throws {SchemaError} if the schema uses unknown validation keywords and strictSchema is enabled
    */
   isValid(context = undefined) {
+    // keyword lint happens here and not at construction time, because additional
+    // validations may be inherited from a parent contract through _parseParent
+    if (!this._keywordLintChecked) {
+      this._reportSchemaProblems(this._lintSchemaKeywords(this.schema, [], []))
+      this._keywordLintChecked = true // set after reporting, so strict mode keeps throwing on every isValid call
+    }
+
     this.isValidState = true // if an error occurs it will set it to false during _validate execution.
     this.errors = {}
     this._validationContext = context
@@ -139,6 +159,8 @@ export default class Contract {
       if (this.contractConfig.ignoreUnderscoredFields && key.startsWith("_")) continue // ignore underscored fields
 
       const value = _currentScope[key]
+      if (null === value || "object" !== typeof value) continue // structurally broken node, reported by the schema lint
+
       const inputValueKeys = value.parseAs || value.as || key
       // inputValueKeys can be a string or an array of strings -> if array, try to find a matching key in inputObject
       const inputValue = Array.isArray(inputValueKeys) ?
@@ -151,7 +173,7 @@ export default class Contract {
         switch (value.dType) {
           case "Array":
             for (let index = 0; index < inputValue.length; index++) {
-              if (undefined === value.arrayOf) console.error("Type of array must be defined in arrayOf: " + _depth.concat(key).join("."))
+              // a missing arrayOf is reported by the schema lint, elements are assigned as they are
               if (undefined === value.arrayOf || "string" === typeof value.arrayOf) {
                 this.setValueAtPath(_depth.concat(key).concat(index), inputValue[index] ?? this._defaultEmptyValueFor(value.arrayOf))
               } else if (Array.isArray(value.arrayOf)) {
@@ -234,6 +256,8 @@ export default class Contract {
       if (this.contractConfig.ignoreUnderscoredFields && key.startsWith("_")) continue // ignore underscored fields
 
       const value = _currentScope[key]
+      if (null === value || "object" !== typeof value) continue // structurally broken node, reported by the schema lint
+
       const renderKeys = value.renderAs || value.as || key // for parsing "as" can be an array of keys, but for rendering it must be a single key -> take the first one
       const renderKey = Array.isArray(renderKeys) ? renderKeys[0] : renderKeys
 
@@ -319,7 +343,8 @@ export default class Contract {
     for (const key of Object.keys(schema)) {
       const value = schema[key]
       if (this.contractConfig.ignoreUnderscoredFields && key.startsWith("_")) continue // ignore underscored fields
-      
+      if (null === value || "object" !== typeof value) continue // structurally broken node, reported by the schema lint
+
       if (undefined !== value["dType"]) {
         this._defineProperty(depth.concat(key), value)
       } else {
@@ -338,9 +363,7 @@ export default class Contract {
     if ("Contract" === config.dType) {
       this.setValueAtPath(depth, this._defaultEmptyValueFor(config.dType, config.contract))
     } else {
-      const isValidDataType = ["String", "Number", "Boolean", "Generic", "Array", "Contract"].includes(config.dType)
-      if (!isValidDataType) console.warn("Wrong dType: " + config.dType + " for: " + depth + ". Assuming Generic dType.")
-
+      // an invalid dType is reported by the schema lint, _defaultEmptyValueFor falls back to Generic
       const targetValue = undefined === config["default"] ?
         this._defaultEmptyValueFor(config.dType) :
         config["default"]
@@ -370,10 +393,11 @@ export default class Contract {
         return []
       case "Contract":
         let newContract = undefined
+        // strictSchema is passed down, so nested contracts of a lenient parent do not throw during their construction
         if ("function" === typeof contract) {
-          newContract = new contract({initNested: this.initNested, initAll: this.initAll})
+          newContract = new contract({initNested: this.initNested, initAll: this.initAll, strictSchema: this.contractConfig.strictSchema})
         } else {
-          newContract = new Contract({schema: contract, initNested: this.initNested, initAll: this.initAll})
+          newContract = new Contract({schema: contract, initNested: this.initNested, initAll: this.initAll, strictSchema: this.contractConfig.strictSchema})
         }
         newContract._parseParent(this)
         return newContract
@@ -393,6 +417,7 @@ export default class Contract {
     this.contractConfig.customLocalization = parent.contractConfig.customLocalization
     this.contractConfig.tryTranslateMessages = parent.contractConfig.tryTranslateMessages
     this.contractConfig.ignoreUnderscoredFields = parent.contractConfig.ignoreUnderscoredFields
+    this.contractConfig.strictSchema = parent.contractConfig.strictSchema
 
     // merge additionalValidations
     const myBreaker = this._additionalValidations?.breaker
@@ -424,6 +449,8 @@ export default class Contract {
       normal: {...baseNormal, ...myNormal},
       breaker: {...baseBreaker, ...myBreaker}
     }
+
+    this._keywordLintChecked = false // available validations changed, keywords need to be linted again on next isValid
   }
 
 }

@@ -23,6 +23,11 @@ describe("handling of special and rare cases", () => {
   })
 
   class TestContractB extends ContractBase {
+    // uses an unsupported inner validation on purpose, so strict schema linting must be off
+    setConfig() {
+      this.contractConfig.strictSchema = false
+    }
+
     defineSchema() {
       return (
         {
@@ -50,6 +55,11 @@ describe("handling of special and rare cases", () => {
   })
 
   class TestContractC extends ContractBase {
+    // uses an unknown validation keyword on purpose, so strict schema linting must be off
+    setConfig() {
+      this.contractConfig.strictSchema = false
+    }
+
     defineSchema() {
       return (
         {
@@ -73,6 +83,11 @@ describe("handling of special and rare cases", () => {
   })
 
   class TestContractD extends ContractBase {
+    // uses an invalid dType on purpose, so strict schema linting must be off
+    setConfig() {
+      this.contractConfig.strictSchema = false
+    }
+
     defineSchema() {
       return (
         {
@@ -106,6 +121,11 @@ describe("handling of special and rare cases", () => {
   })
 
   class TestContractE extends ContractBase {
+    // misses arrayOf on purpose, so strict schema linting must be off
+    setConfig() {
+      this.contractConfig.strictSchema = false
+    }
+
     defineSchema() {
       return (
         {

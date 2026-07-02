@@ -19,6 +19,7 @@
     "index.js",
     "validation-base.js",
     "validations.js",
+    "schema-lint.js",
     "doc",
     "coverage-badge.svg"
   ],

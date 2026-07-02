@@ -10,7 +10,7 @@ describe("max validation", () => {
           ...{
             valueA: {dType: "String", max: 5},
             valueB: {dType: "Number", max: () => 3},
-            valueC: {dType: "Array", max: 3},
+            valueC: {dType: "Array", arrayOf: "Generic", max: 3},
             valueD: {dType: "Generic", max: 2},
           }
         }
@@ -73,7 +73,7 @@ describe("max validation", () => {
         return {
           ...super.defineSchema(),
           ...{
-            arrayField: {dType: "Array", max: 2},
+            arrayField: {dType: "Array", arrayOf: "Generic", max: 2},
             numberField: {dType: "Number", max: 5},
           }
         }

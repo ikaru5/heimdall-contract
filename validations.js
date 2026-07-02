@@ -6,19 +6,19 @@
  *   - normal   -  Standard validations; if one fails, the field is considered invalid.
  * 
  * Each validation requires a "check" function that uses destructured named parameters:
- * 
+ *
  * @typedef {Object} CheckParams
  * @property {*} value - The value being validated (always provided)
  * @property {*} config - The validation configuration (nearly always needed)
  * @property {string} dType - The data type (often helpful for type-specific validation)
  * @property {Array<string>} depth - The field path depth (optional, used for nested objects)
  * @property {Object} contract - The contract instance (optional, provides context)
- * 
+ *
  * check function signature: ({value, config, dType, depth, contract}) => boolean
- * 
+ *
  * For better error messages instead of generic "Field invalid!", a message function can be defined.
  * Note: Message functions are not used for breaker validations.
- * 
+ *
  * @typedef {Object} MessageParams
  * @property {*} value - The value being validated (always provided)
  * @property {*} config - The validation configuration (nearly always needed)
@@ -26,7 +26,7 @@
  * @property {Array<string>} depth - The field path depth (optional, used for nested objects)
  * @property {Object} contract - The contract instance (optional, provides context)
  * @property {Function} customLocalization - Custom localization function (optional, like i18next)
- * 
+ *
  * message function signature: ({value, config, dType, depth, contract, customLocalization}) => string
  */
 export const validationDefinitions = {
@@ -98,8 +98,8 @@ export const validationDefinitions = {
           case "Array":
             return value !== null && "object" === typeof value && "number" === typeof value.length
           default:
-            console.error("Invalid dType provided: " + dataType)
-            return false // should not be reachable unless invalid dType provided
+            // an invalid dType is reported by the schema lint, the field can never be valid
+            return false
         }
       },
       /**

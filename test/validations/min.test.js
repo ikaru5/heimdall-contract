@@ -10,7 +10,7 @@ describe("min validation", () => {
           ...{
             valueA: {dType: "String", min: 5},
             valueB: {dType: "Number", min: () => 3},
-            valueC: {dType: "Array", min: 2},
+            valueC: {dType: "Array", arrayOf: "Generic", min: 2},
             valueD: {dType: "Generic", min: 2},
           }
         }
@@ -73,7 +73,7 @@ describe("min validation", () => {
         return {
           ...super.defineSchema(),
           ...{
-            arrayField: {dType: "Array", min: 3},
+            arrayField: {dType: "Array", arrayOf: "Generic", min: 3},
             numberField: {dType: "Number", min: 10},
           }
         }

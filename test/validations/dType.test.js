@@ -3,6 +3,11 @@ import ContractBase from "../../index.js"
 
 describe("dType validation", () => {
   class TestContract extends ContractBase {
+    // the schema contains an invalid dType on purpose, so strict schema linting must be off
+    setConfig() {
+      this.contractConfig.strictSchema = false
+    }
+
     defineSchema() {
       return (
         {

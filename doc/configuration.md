@@ -51,4 +51,25 @@ export default class Contract extends ContractBase {
 const contract = new ContractBase({schema, ignoreUnderscoredFields: true})
 ```
 
+## strictSchema
+
+`strictSchema` is `true` by default. Heimdall lints your schema (see [Schema Linting](schema.md#schema-linting)) and throws a `SchemaError` listing all problems - structural problems at construction time, unknown validation keywords on the first `isValid()` call.
+
+Schema problems are programming errors, so failing loud and early is the right default. But sometimes you do not want strict schema linting - for example when the schema carries custom keywords for a form generator, or during a migration. Set `strictSchema` to `false` and Heimdall behaves lenient: problems are only written to the console, unknown keywords are ignored and invalid parts of the schema are skipped.
+
+Like `ignoreUnderscoredFields` it can be set in `setConfig` or as a constructor option, and it is passed down to nested contracts - a lenient parent will not throw for a broken nested contract.
+
+```Javascript
+import ContractBase from "@ikaru5/heimdall-contract"
+
+export default class Contract extends ContractBase {
+  setConfig() {
+    this.contractConfig.strictSchema = false // default is true - schema problems throw a SchemaError
+  }
+}
+
+// or simply pass it as a constructor option
+const contract = new ContractBase({schema, strictSchema: false})
+```
+
 [back to root](../README.md#Documentation)

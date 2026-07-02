@@ -265,13 +265,18 @@ describe("validation", () => {
       username: {dType: "String", presence: true, min: 3, _meta: {note: "internal"}}
     }
 
-    // without the flag the underscored key is treated as an undefined validation
+    // without the flag the underscored key is treated as an unknown validation and throws in strict mode
     const withFlagOff = new ContractBase({schema})
-    const spyOff = jest.spyOn(console, "error").mockImplementation(() => {})
     withFlagOff.assign({username: "ikarus"})
-    expect(withFlagOff.isValid()).toBe(true)
-    expect(spyOff.mock.calls.flat().some(arg => typeof arg === "string" && arg.includes("_meta"))).toBe(true)
-    spyOff.mockRestore()
+    expect(() => withFlagOff.isValid()).toThrow(/_meta/)
+
+    // without the flag but with strictSchema off the unknown validation is only logged
+    const lenient = new ContractBase({schema, strictSchema: false})
+    const spyLenient = jest.spyOn(console, "error").mockImplementation(() => {})
+    lenient.assign({username: "ikarus"})
+    expect(lenient.isValid()).toBe(true)
+    expect(spyLenient.mock.calls.flat().some(arg => typeof arg === "string" && arg.includes("_meta"))).toBe(true)
+    spyLenient.mockRestore()
 
     // with the flag the underscored validation key is ignored
     const withFlagOn = new ContractBase({schema, ignoreUnderscoredFields: true})
@@ -293,13 +298,18 @@ describe("validation", () => {
       items: {dType: "Array", arrayOf: ItemContract, innerValidate: {_meta: "internal"}}
     }
 
-    // without the flag the underscored inner validation is reported as undefined/invalid
+    // without the flag the underscored inner validation is treated as unsupported and throws in strict mode
     const withFlagOff = new ContractBase({schema})
-    const spyOff = jest.spyOn(console, "error").mockImplementation(() => {})
     withFlagOff.assign({items: [{name: "foo"}]})
-    expect(withFlagOff.isValid()).toBe(true)
-    expect(spyOff.mock.calls.flat().some(arg => typeof arg === "string" && arg.includes("_meta"))).toBe(true)
-    spyOff.mockRestore()
+    expect(() => withFlagOff.isValid()).toThrow(/_meta/)
+
+    // without the flag but with strictSchema off the unsupported inner validation is only logged
+    const lenient = new ContractBase({schema, strictSchema: false})
+    const spyLenient = jest.spyOn(console, "error").mockImplementation(() => {})
+    lenient.assign({items: [{name: "foo"}]})
+    expect(lenient.isValid()).toBe(true)
+    expect(spyLenient.mock.calls.flat().some(arg => typeof arg === "string" && arg.includes("_meta"))).toBe(true)
+    spyLenient.mockRestore()
 
     // with the flag the underscored inner validation key is ignored
     const withFlagOn = new ContractBase({schema, ignoreUnderscoredFields: true})

@@ -10,8 +10,8 @@ describe("only validation", () => {
           ...{
             valueA: {dType: "String", only: "only valid value"},
             valueB: {dType: "String", only: ["Tim", "Tom"]},
-            valueC: {dType: "Array", only: ["Tim", "Tom"]},
-            valueD: {dType: "Array", only: () => ["Tim", "Tom"]},
+            valueC: {dType: "Array", arrayOf: "Generic", only: ["Tim", "Tom"]},
+            valueD: {dType: "Array", arrayOf: "Generic", only: () => ["Tim", "Tom"]},
             valueE: {dType: "String", only: ["Tim"]},
           }
         }

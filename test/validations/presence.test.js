@@ -17,8 +17,8 @@ describe("presence validation", () => {
             valueE: {dType: "Boolean", presence: true},
             valueF: {dType: "Generic", presence: true},
             valueG: {dType: "Generic", presence: true},
-            valueH: {dType: "Array", presence: true},
-            valueI: {dType: "Array", presence: true}
+            valueH: {dType: "Array", arrayOf: "Generic", presence: true},
+            valueI: {dType: "Array", arrayOf: "Generic", presence: true}
           }
         }
       )

@@ -10,6 +10,7 @@ export const validate = function (schema = this.schema, depth = []) {
     if (this.contractConfig.ignoreUnderscoredFields && key.startsWith("_")) continue // ignore underscored fields
 
     const value = schema[key]
+    if (null === value || "object" !== typeof value) continue // structurally broken node, reported by the schema lint
 
     // if value has a dType, it is a property and not a nested object
     if (undefined !== value["dType"]) {
@@ -41,8 +42,8 @@ export const validateArray = function (depth, propertyConfiguration, key) {
   if ("string" === typeof propertyConfiguration.arrayOf || (Array.isArray(propertyConfiguration.arrayOf) && "string" === typeof propertyConfiguration.arrayOf[0])) {
     if (undefined === propertyConfiguration.innerValidate) return // if no inner validations defined, no need to do something
 
-    // create a stubbed configuration for the inner validation
-    const stubbedConfig = propertyConfiguration.innerValidate
+    // create a stubbed configuration for the inner validation - a copy, so the user provided schema is never mutated
+    const stubbedConfig = {...propertyConfiguration.innerValidate}
     stubbedConfig["dType"] = propertyConfiguration.arrayOf
 
     // validate each element
@@ -66,12 +67,9 @@ export const validateArray = function (depth, propertyConfiguration, key) {
       const elementDepth = depth.concat(key).concat(index)
 
       // no innerValidations are allowed for contracts, but breakers may be defined
+      // unsupported keywords are reported by the schema lint
       if (undefined !== propertyConfiguration.innerValidate) {
-        const {usedBreakers, outbreaksValidations} = checkBreakers(this, Object.keys(propertyConfiguration.innerValidate), elements[index], propertyConfiguration.innerValidate, "Contract", elementDepth)
-        if (outbreaksValidations) continue // if a breakers matched, no need to do further validations
-
-        const remainingValidations = Object.keys(propertyConfiguration.innerValidate).filter(f => !usedBreakers.includes(f) && !(this.contractConfig.ignoreUnderscoredFields && f.startsWith("_")))
-        for (const validationName of remainingValidations) console.error(`Undefined or invalid validation: ${validationName} at ${elementDepth.join(".")}`)
+        if (checkBreakers(this, Object.keys(propertyConfiguration.innerValidate), elements[index], propertyConfiguration.innerValidate, "Contract", elementDepth)) continue // if a breaker matched, no need to do further validations
       }
 
       // if element is not a function -> it is not a contract -> try creating a nested contract
@@ -117,16 +115,12 @@ export const validateProperty = function (depth, propertyConfiguration) {
 
 
   // 1. STEP: check validation breakers like "allowBlank" or "validateIf"
-  const {usedBreakers, outbreaksValidations} = checkBreakers(this, validations, propValue, propertyConfiguration, dType, depth)
-  if (outbreaksValidations) return // if a breakers matched, no need to do further validations
-
-  // remove the breakers and get only normal validations
-  const normalValidations = validations.filter(f => !usedBreakers.includes(f))
+  if (checkBreakers(this, validations, propValue, propertyConfiguration, dType, depth)) return // if a breaker matched, no need to do further validations
 
   // 2 STEP: execute normal validations
-  const usedNormalValidations = []
-
+  // unknown validation keywords are reported by the schema lint and simply skipped here
   if ("Contract" === dType) {
+    // contracts delegate to the validations of the nested contract, normal validations on the field itself are not supported
     const nestedContract = this.getValueAtPath(depth)
     nestedContract._parseParent(this) // set parent and its attributes like localization method
 
@@ -134,9 +128,6 @@ export const validateProperty = function (depth, propertyConfiguration) {
       this.isValidState = false
       this.setValueAtPath(["errors"].concat(depth), nestedContract.errors)
     }
-    // contracts should not have normal validations and will be skipped
-    // there will be an error about invalid validations in the console if there are any (see end of this function)
-    usedNormalValidations.push("dType")
   } else {
     for (const validationName of validations) { // iterate over all validations
       if (undefined !== this._validations.normal[validationName]) { // check if validation is defined
@@ -145,8 +136,6 @@ export const validateProperty = function (depth, propertyConfiguration) {
           errors.push(errorMessage)
           this.isValidState = false
         }
-
-        usedNormalValidations.push(validationName)
       }
 
       // run custom "validation"
@@ -164,8 +153,6 @@ export const validateProperty = function (depth, propertyConfiguration) {
           errors.push(this._getGenericErrorMessage())
           this.isValidState = false
         }
-
-        usedNormalValidations.push(validationName)
       }
     }
   }
@@ -173,10 +160,6 @@ export const validateProperty = function (depth, propertyConfiguration) {
 
   // 3. STEP assign errors if any
   if (errors.length > 0) this.setValueAtPath(["errors"].concat(depth).concat("messages"), errors)
-
-  // remove normal validations, and it should be empty, but if not, there are undefined validations (probably a typo in the schema)
-  const remainingValidations = normalValidations.filter(f => !usedNormalValidations.includes(f))
-  for (const validationName of remainingValidations) console.error("Undefined validation: " + validationName)
 }
 
 /**
@@ -188,27 +171,24 @@ export const validateProperty = function (depth, propertyConfiguration) {
  * @param {Object} propertyConfiguration - Configuration object for the property
  * @param {string} dType - Data type of the property
  * @param {Array<string>} depth - Current depth path in the schema
- * @returns {Object} Object with usedBreakers array and outbreaksValidations boolean
+ * @returns {boolean} True if a breaker matched and the remaining validations should be skipped
  * @private
  */
 const checkBreakers = (instance, validations, propValue, propertyConfiguration, dType, depth) => {
-  const usedBreakers = []
   for (const breakerName of validations) {
     if (undefined !== instance._validations.breaker[breakerName]) {
       if (instance._validations.breaker[breakerName].check({value: propValue, config: propertyConfiguration[breakerName], dType, depth, contract: instance})) {
-        return {outbreaksValidations: true} // if one of the breakers return true, the field is valid
+        return true // if one of the breakers return true, the field is valid
       }
-      usedBreakers.push(breakerName)
     }
 
     // custom breaker
     if ("validateIf" === breakerName) {
-      if (!propertyConfiguration[breakerName](propValue, instance, dType, depth)) return {outbreaksValidations: true}
-      usedBreakers.push(breakerName)
+      if (!propertyConfiguration[breakerName](propValue, instance, dType, depth)) return true
     }
   }
 
-  return {usedBreakers, outbreaksValidations: false}
+  return false
 }
 
 /**

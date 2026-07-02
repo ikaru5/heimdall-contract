@@ -62,7 +62,7 @@ Whether it is a field definition is determined by the presence of the dType prop
 
 ### [dType](validation/dType.md)
 dType is a normal validation and it defines the expected data type of the property. 
-The available types are "String", "Number", "Boolean", "Array", "Object", and "Contract".
+The available types are "String", "Number", "Boolean", "Generic", "Array", and "Contract".
 
 Another magic field is errors at the root level of any contract. It will be written by calling the [validations](validation.md).
 
@@ -72,15 +72,32 @@ All [validations](validation.md) are mixed within the schema object. Also, custo
 
 ### Unknown field definition keywords
 
-If you define a field definition with a keyword that is not known to the schema, it will be ignored by the logic. 
-But an error will be written to the console. 
+Schema problems are programming errors, so by default Heimdall lints the schema and throws a `SchemaError` (see [Schema Linting](#schema-linting)) when a field definition contains an unknown keyword - most of the time this is a typo like `presense` instead of `presence`.
 
-This is a feature to make the schema more flexible and to be able to use it for other purposes. 
-For example, you can use the schema to generate a form and fields like "_label" or "_placeholder" can be helpful.
+If you want to use custom keywords in the schema for other purposes, there are two supported ways:
 
-**Attention**: If you enable the [ignoreUnderscoredFields](configuration.md) option, every keyword starting with an underscore (like "_label" or "_placeholder") is fully ignored and no error will be written to the console.
+- Enable the [ignoreUnderscoredFields](configuration.md) option and prefix your keywords with an underscore (like "_label" or "_placeholder"). They are then fully ignored by assignment, validation and rendering. This is handy if you want to use the schema to generate forms for example.
+- Disable strict linting with `strictSchema: false` (see [Configuration](configuration.md)). Unknown keywords are then ignored by the logic and only reported to the console.
 
-An example of a generator will be linked in the future.
+## Schema Linting
+
+Heimdall checks your schema in two phases and collects all problems of a phase into a single `SchemaError`:
+
+1. `Structure` - checked when the contract is constructed: valid dTypes, `arrayOf` present and valid on Array fields, `contract` present and valid on Contract fields, schema nodes are objects, `validate`/`validateIf` are functions. Inline schemas inside `arrayOf` and `contract` are checked as well.
+2. `Keywords` - checked on the first `isValid()` call: every keyword of a field definition must be a known validation. This can not happen at construction time, because [additional validations](validation/additionalValidations.md) may be inherited from a parent contract, which are only known at validation time.
+
+```Javascript
+import ContractBase, {SchemaError} from "@ikaru5/heimdall-contract"
+
+try {
+  const contract = new ContractBase({schema: {name: {dType: "Strng"}}})
+} catch (error) {
+  error instanceof SchemaError // true
+  error.problems // ['invalid dType "Strng" at "name"']
+}
+```
+
+In strict mode (the default) a `SchemaError` is thrown. With `strictSchema: false` the same message is written to the console instead and the offending parts of the schema are ignored - see [Configuration](configuration.md).
 
 ## Nesting
 
