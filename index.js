@@ -3,6 +3,7 @@ import {lintSchemaKeywords, lintSchemaStructure, reportSchemaProblems, SchemaErr
 import { validationDefinitions as baseValidationDefinitions } from "./validations.js"
 
 export { SchemaError }
+export { contractClass } from "./contract-factory.js"
 
 /**
  * The type vocabulary lives handwritten in types.d.ts - see doc/typescript.md

@@ -121,6 +121,7 @@ Inherit from your base class and define your contracts! Have Fun!
 - [Installation & Getting Started](doc/getting_started.md)
 - [General Usage](doc/general_usage.md)
 - [TypeScript](doc/typescript.md)
+  - [Type Inference](doc/typescript.md#type-inference)
 - [Configuration](doc/configuration.md)
 - [API](doc/api.md)
   - [Hooks](doc/api.md#hooks)
@@ -218,6 +219,7 @@ contextContract.isValid("matchAnyContext") // magic context to match all context
 - [x] add JSDoc
 - [x] strict schema linting with SchemaError
 - [x] add TS types
+- [x] Zod-like type inference via contractClass factory
 
 ## Contributing
 

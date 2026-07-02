@@ -26,6 +26,7 @@
     "validation-base.js",
     "validations.js",
     "schema-lint.js",
+    "contract-factory.js",
     "types.js",
     "*.d.ts",
     "doc",

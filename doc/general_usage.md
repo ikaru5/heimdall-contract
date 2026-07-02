@@ -82,11 +82,34 @@ const userSchema = {
 
 // if you want to use your base class
 import Contract from "../contract"
-const userContract = new Contract(userSchema)
+const userContract = new Contract({schema: userSchema})
 
 // or if you want to use the base class from this library
-import { ContractBase } from "@ikaru5/heimdall-contract" // 
-const userContract = new Contract(userSchema)
+import { ContractBase } from "@ikaru5/heimdall-contract"
+const userContract = new ContractBase({schema: userSchema})
+```
+
+### Alternative: Creating a Contract class with the contractClass factory
+
+If you want a reusable contract class without writing the class boilerplate, use the `contractClass` factory.
+It returns a regular contract class: instantiate it, extend it, nest it via `dType: "Contract"` or `arrayOf` - everything works like with a handwritten class.
+For TypeScript users the returned class additionally carries typed fields inferred from the schema (see [Type Inference](typescript.md#type-inference)).
+
+```javascript
+import { contractClass } from "@ikaru5/heimdall-contract"
+
+const UserContract = contractClass({
+  email: { dType: "String", presence: true, isEmail: true },
+  username: { dType: "String", presence: true, min: 6 },
+})
+
+const userContract = new UserContract()
+```
+
+You can pass a base class as second argument - its schema, hooks and additional validations are inherited and the given schema is merged on top:
+
+```javascript
+const EmployeeContract = contractClass({ staffId: { dType: "Number", presence: true } }, UserContract)
 ```
 
 ### Assigning Data

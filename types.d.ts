@@ -212,3 +212,69 @@ export interface ValidationErrors {
   messages?: Array<string>
   [field: string]: ValidationErrors | Array<string> | undefined
 }
+
+// ---------------------------------------------------------------------------------------
+// Type inference - deriving instance field types from a schema (doc/typescript.md#type-inference)
+// ---------------------------------------------------------------------------------------
+
+/**
+ * Derives the instance field types from a schema.
+ *
+ * The types mirror the runtime exactly: every field always exists because heimdall
+ * initializes it with its default empty value - "" for String, null for Number,
+ * undefined for Boolean, [] for Array, a contract instance for Contract.
+ *
+ * The schema must keep its literal type for this to work: either let it be inferred
+ * through contractClass(schema), or preserve it with `satisfies Schema` - an explicit
+ * `: Schema` annotation would widen it and erase the field information.
+ */
+export type InferContract<S extends Schema> = {
+  [K in keyof S]: InferField<S[K]>
+}
+
+/** Derives the type of a single schema node: a field definition or a nested schema object. */
+type InferField<F> =
+  F extends {dType: "String"} ? string :
+  F extends {dType: "Number"} ? number | null :
+  F extends {dType: "Boolean"} ? boolean | undefined :
+  F extends {dType: "Generic"} ? any :
+  F extends {dType: "Array", arrayOf: infer A} ? Array<InferElement<A>> :
+  F extends {dType: "Array"} ? Array<unknown> :
+  F extends {dType: "Contract", contract: infer C} ? InferNested<C> :
+  F extends Schema ? InferContract<F> :
+  never
+
+/** Derives the element type of an arrayOf config. Distributes over mixed type arrays. */
+type InferElement<A> =
+  A extends "String" ? string :
+  A extends "Number" ? number :
+  A extends "Boolean" ? boolean :
+  A extends "Generic" ? any :
+  A extends ContractClass ? InstanceType<A> :
+  A extends ReadonlyArray<infer E> ? InferElement<E> :
+  A extends Schema ? Contract & InferContract<A> :
+  unknown
+
+/** Derives the instance type of a nested contract config: a contract class or an inline schema. */
+type InferNested<C> =
+  C extends ContractClass ? InstanceType<C> :
+  C extends Schema ? Contract & InferContract<C> :
+  never
+
+/**
+ * Compile time schema linting for inference entry points like contractClass.
+ *
+ * Generic inference does not apply excess property checks, so a typo like "presense"
+ * would silently pass through `S extends Schema`. Intersecting the parameter with
+ * this type maps every unknown keyword to never, which turns the typo into a compile
+ * error - the type level counterpart of the runtime schema lint.
+ * Custom validations added to PropertyDefinition via declaration merging are known keys.
+ */
+export type ValidateSchema<S> = {
+  [K in keyof S]: S[K] extends {dType: any} ? ValidateField<S[K]> : ValidateSchema<S[K]>
+}
+
+/** Maps unknown keywords of a field definition to never - see ValidateSchema. */
+type ValidateField<F> = {
+  [K in keyof F]: K extends keyof PropertyDefinition ? F[K] : never
+}
