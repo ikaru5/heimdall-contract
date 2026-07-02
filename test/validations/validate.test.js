@@ -46,4 +46,14 @@ describe("custom validate", () => {
       valueA: {messages: ["some error message"]},
     })
   })
+
+  it('fails and returns generic error when validate returns non-string non-boolean', () => {
+    const testContract = new TestContract()
+    testContract.valueA = "abc"
+    ReturnStub.returnValue = undefined
+    expect(testContract.isValid()).toBe(false)
+    expect(testContract.errors).toStrictEqual({
+      valueA: {messages: ["Field invalid!"]},
+    })
+  })
 })

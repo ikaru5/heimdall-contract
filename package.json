@@ -1,6 +1,6 @@
 {
   "name": "@ikaru5/heimdall-contract",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Validation and Representer Objects in your Frontend",
   "license": "MIT",
   "repository": {
@@ -23,7 +23,7 @@
     "coverage-badge.svg"
   ],
   "keywords": [
-    "heimddall",
+    "heimdall",
     "contract",
     "validation",
     "representer"

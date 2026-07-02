@@ -189,6 +189,136 @@ describe("arrays", () => {
     expect(contract.isValid()).toBe(true)
   })
 
+  it('should use default empty value when assign null/undefined to string-type array', () => {
+    class TestContractWithNullInArray extends ContractBase {
+      defineSchema() {
+        return {
+          ...super.defineSchema(),
+          ...{
+            names: {dType: "Array", arrayOf: "String"},
+            ages: {dType: "Array", arrayOf: "Number"},
+          }
+        }
+      }
+    }
+
+    const contract = new TestContractWithNullInArray()
+    contract.assign({names: ["Alice", null, undefined, "Bob"], ages: [25, null, undefined, 30]})
+
+    expect(contract.names).toStrictEqual(["Alice", "", "", "Bob"])
+    expect(contract.ages).toStrictEqual([25, null, null, 30])
+    expect(contract.isValid()).toBe(true)
+  })
+
+  it('should preserve falsy values (0, false, empty string) when assigning arrays', () => {
+    class TestContractWithFalsyValues extends ContractBase {
+      defineSchema() {
+        return {
+          ...super.defineSchema(),
+          ...{
+            numbers: {dType: "Array", arrayOf: "Number"},
+            flags: {dType: "Array", arrayOf: "Boolean"},
+            words: {dType: "Array", arrayOf: "String"},
+            mixed: {dType: "Array", arrayOf: ["Number", "Boolean"]},
+          }
+        }
+      }
+    }
+
+    const contract = new TestContractWithFalsyValues()
+    contract.assign({numbers: [0, 1], flags: [false, true], words: ["", "x"], mixed: [0, false, 1]})
+
+    expect(contract.numbers).toStrictEqual([0, 1])
+    expect(contract.flags).toStrictEqual([false, true])
+    expect(contract.words).toStrictEqual(["", "x"])
+    expect(contract.mixed).toStrictEqual([0, false, 1])
+    expect(contract.isValid()).toBe(true)
+  })
+
+  it('should not throw and report a dType error when an array field is null', () => {
+    const contract = new ArrayedContract()
+    contract.numbers = null
+
+    expect(() => contract.isValid()).not.toThrow()
+    expect(contract.isValid()).toBe(false)
+    expect(contract.errors).toStrictEqual({
+      numbers: {messages: ['"null" is not a valid Array']}
+    })
+  })
+
+  it('should treat null/undefined elements of a contract array as empty contracts instead of throwing', () => {
+    class ItemContract extends ContractBase {
+      defineSchema() {
+        return {
+          ...super.defineSchema(),
+          ...{name: {dType: "String", presence: true}}
+        }
+      }
+    }
+
+    class ListContract extends ContractBase {
+      defineSchema() {
+        return {
+          ...super.defineSchema(),
+          ...{items: {dType: "Array", arrayOf: ItemContract}}
+        }
+      }
+    }
+
+    // direct assignment
+    const contract = new ListContract()
+    contract.items = [null, undefined, {name: "Alice"}]
+    expect(() => contract.isValid()).not.toThrow()
+    expect(contract.isValid()).toBe(false)
+    expect(contract.errors).toStrictEqual({
+      items: {
+        0: {name: {messages: ["not present"]}},
+        1: {name: {messages: ["not present"]}},
+      }
+    })
+    expect(contract.items[0].isAssignedEmpty).toBe(true) // same behavior as assign() with null
+
+    // via assign
+    const assignedContract = new ListContract()
+    assignedContract.assign({items: [null, {name: "Alice"}]})
+    expect(assignedContract.isValid()).toBe(false)
+    expect(assignedContract.errors).toStrictEqual({
+      items: {0: {name: {messages: ["not present"]}}}
+    })
+  })
+
+  it('should not throw when a mixed contract array receives null elements', () => {
+    class TypedItemContract extends ContractBase {
+      defineSchema() {
+        return {
+          ...super.defineSchema(),
+          ...{name: {dType: "String"}}
+        }
+      }
+    }
+
+    class MixedListContract extends ContractBase {
+      defineSchema() {
+        return {
+          ...super.defineSchema(),
+          ...{items: {dType: "Array", arrayOf: [TypedItemContract]}}
+        }
+      }
+    }
+
+    // via assign: null is reported to the console and becomes an empty contract
+    console.error.mockClear()
+    const assignedContract = new MixedListContract()
+    expect(() => assignedContract.assign({items: [null, {name: "Alice", arrayElementType: "TypedItemContract"}]})).not.toThrow()
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining("Array of objects must be an array of objects!"))
+    expect(() => assignedContract.isValid()).not.toThrow()
+
+    // direct assignment
+    const contract = new MixedListContract()
+    contract.items = [null]
+    expect(() => contract.isValid()).not.toThrow()
+  })
+
   it('should handle error condition when non-object passed to Contract array', () => {
     class TestContractForArray extends ContractBase {
       defineSchema() {

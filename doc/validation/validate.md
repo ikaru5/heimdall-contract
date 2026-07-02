@@ -36,6 +36,15 @@ If the validation function returns `false`, the field will be considered invalid
 
 In the above example, the `fieldName` does not contain an '@' character, the custom validation function returns a custom error message "must contain '@'". This message will be added to the errors.
 
+## Return Value Semantics
+
+The return value of the validation function is interpreted as follows:
+
+- `true` — the field is valid.
+- `false` — the field is invalid; the generic error message "Field invalid!" is added to the errors.
+- a string — the field is invalid; the string is used as the error message.
+- anything else (e.g. `undefined` because of a missing `return` statement) — the field is invalid; the generic error message "Field invalid!" is added to the errors.
+
 ## Note
 
 The `validate` keyword can be used with any data type. If a custom error message is not provided (i.e., if the function returns `false`), the default error message is "Field invalid!".

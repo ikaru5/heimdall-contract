@@ -73,4 +73,27 @@ describe("presence validation", () => {
       checkMethod({value: "doesnt matter", config: true, dType: "Invalid"})
     ).toBe(false)
   })
+
+  it('does not throw and is invalid when a required Array field is null', () => {
+    class NullArrayContract extends ContractBase {
+      defineSchema() {
+        return (
+          {
+            ...super.defineSchema(),
+            ...{
+              values: {dType: "Array", arrayOf: "String", presence: true}
+            }
+          }
+        )
+      }
+    }
+
+    const testContract = new NullArrayContract()
+    testContract.values = null
+    expect(() => testContract.isValid()).not.toThrow()
+    expect(testContract.isValid()).toBe(false)
+    expect(testContract.errors).toStrictEqual({
+      values: {messages: ['"null" is not a valid Array', "not present"]},
+    })
+  })
 })

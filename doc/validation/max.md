@@ -36,7 +36,7 @@ In the above example, the `fieldName` field must be a number less than or equal 
 
 The `max` validator is applicable only to the `String`, `Array`, and `Number` data types.
 
-The error message for `max` is dynamic and indicates the maximum limit. For a string, the message is "must have less than {maxCount} characters". For an array, the message is "must have less than {maxCount} elements". For a number, the message is "must be lower or equal than {maxCount}".
+The error message for `max` is dynamic and indicates the maximum limit. For a string, the message is "must have at most {maxCount} characters". For an array, the message is "must have at most {maxCount} elements". For a number, the message is "must be less than or equal to {maxCount}".
 
 When using a `customLocalization` callback, the translation keys for these validation errors are `errors:max.String` for strings, `errors:max.Array` for arrays, and `errors:max.Number` for numbers. For internationalization, you can provide translations for these keys through your `customLocalization` callback.
 

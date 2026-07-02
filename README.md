@@ -18,6 +18,22 @@ Target is to create Contracts like Rubys Trailblazer-Reform for your JS-Frontend
 - LIGHTWEIGHT: Heimdall Contracts is lightweight. It has no dependencies and is only 3.1kb minified and gzipped.
 - TRANSLATABLE: You can use your own translation library like i18next for error messages.
 
+## Why Heimdall and not Zod, Yup or Valibot?
+
+Short answer: they solve a different problem.
+
+Zod, Yup and Valibot are schema **parsers**: you throw data at a schema, get a validated result and are done — stateless and perfect for type-checking data at an API boundary.
+
+A Heimdall Contract is a **form object** (inspired by Ruby's Trailblazer-Reform): a stateful, class-based data holder that accompanies the whole lifecycle of a form or process:
+
+- Instantiate it empty and bind your inputs directly to its properties.
+- `assign()` nested data from your API or state management — including key mapping via `parseAs`/`renderAs`.
+- Validate the same contract differently per situation using validation contexts (`on: "signup"`).
+- Reuse and extend contracts through class inheritance and nesting.
+- Render a clean object for sending with `toObject()`.
+
+If you just need to parse and type-check data once (especially with TypeScript type inference), use Zod — the tools complement each other rather than compete. If you need a reusable, stateful data object living between your UI and your API, that is what Heimdall Contract is built for.
+
 ## Example
 
 First lets build a signup data contract!
@@ -82,16 +98,20 @@ from your API or State Management System for example,
 you can assign it like that:
 
 ```Javascript
-signUpContract.name = "Kirill"
-signUpContract.address.street = "Uhlandstr. 36"
-
-console.log(
-  signUpContract.name
-)
-
-console.log(
-  signUpContract.address.street
-)
+signUpContract.assign({
+  name: "Kirill",
+  agb: true,
+  email: "kirill@example.com",
+  username: "kirill94",
+  password: "secret-password",
+  passwordRepeat: "secret-password",
+  address: {
+    street: "Uhlandstr.",
+    streetNumber: 36,
+    plz: "10437",
+    city: "Berlin"
+  }
+})
 ```
 
 Inherit from your base class and define your contracts! Have Fun!
@@ -134,7 +154,7 @@ Inherit from your base class and define your contracts! Have Fun!
 # Validation Context
 
 It is possible to do validations only if a specific context is set.
-It is a quality o life feature and could also be implemented through validateIf.
+It is a quality of life feature and could also be implemented through validateIf.
 
 ```Javascript
 class SubContextContract extends ContractBase {
@@ -198,7 +218,7 @@ contextContract.isValid("matchAnyContext") // magic context to match all context
 
 ## Contributing
 
-1. Fork it (<https://github.com/your-github-user/schemas/fork>)
+1. Fork it (<https://github.com/ikaru5/heimdall-contract/fork>)
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)

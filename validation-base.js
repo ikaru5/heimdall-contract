@@ -34,7 +34,7 @@ export const validate = function (schema = this.schema, depth = []) {
 export const validateArray = function (depth, propertyConfiguration, key) {
   const elements = this.getValueAtPath(depth.concat(key))
 
-  if (undefined === elements || 0 === elements.length) return // if no elements present nothing to validate
+  if (undefined === elements || null === elements || 0 === elements.length) return // if no elements present nothing to validate; a null value is already reported by the dType validation
 
   // if definitions is a string, it is a dType and we can use the default validation of _validateProperty for each element
   // or if it is an array of strings, it must be a mixed type array of basic types
@@ -76,10 +76,11 @@ export const validateArray = function (depth, propertyConfiguration, key) {
 
       // if element is not a function -> it is not a contract -> try creating a nested contract
       // this will most likely always be the case when values are assigned manually and not by assign-method
-      if ("function" !== typeof elements[index]._parseParent) {
+      // null/undefined elements become empty contracts (isAssignedEmpty), mirroring what assign() does with them
+      if ("function" !== typeof elements[index]?._parseParent) {
         elements[index] = this._createNestedContractForArray(
           Array.isArray(propertyConfiguration.arrayOf) ?
-            propertyConfiguration.arrayOf.find(contractClass => this._getNameOfClass(contractClass) === elements[index]["arrayElementType"]) :
+            propertyConfiguration.arrayOf.find(contractClass => this._getNameOfClass(contractClass) === elements[index]?.["arrayElementType"]) :
             propertyConfiguration.arrayOf,
           elements[index]
         )
@@ -156,8 +157,11 @@ export const validateProperty = function (depth, propertyConfiguration) {
             this.isValidState = false
             errors.push(this._getGenericErrorMessage())
           } // use generic error message
-        } else {
+        } else if ("string" === typeof resultOfCustomValidation) {
           errors.push(resultOfCustomValidation)
+          this.isValidState = false
+        } else {
+          errors.push(this._getGenericErrorMessage())
           this.isValidState = false
         }
 

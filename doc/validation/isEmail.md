@@ -2,34 +2,47 @@
 
 # isEmail Validator
 
-The `isEmail` validator checks if a string input follows the structure of a standard email address. This validator can be set to `true`, `false`, or a function returning `true` or `false`.
+The `isEmail` validator checks if a string input is a valid email address. This validator can be set to `true`, `false`, or a function returning `true` or `false`.
+
+- `isEmail: true` — the value must be a valid email address.
+- `isEmail: false` — the value must **not** be an email address.
 
 ## Basic Usage
 
 ```javascript
 {
-  fieldName: {dType: "String", match: /^[a-zA-Z0-9\s]*$/}
+  fieldName: {dType: "String", isEmail: true}
 }
 ```
 
-In the above example, `fieldName` should match the provided regular expression, which only allows alphanumeric characters and whitespaces. If fieldName does not match this pattern, the validation will fail.
+In the above example, `fieldName` must be a valid email address. If it is not, the validation will fail.
 
 ## Dynamic Validation
 
 ```javascript
 {
-  fieldName: {dType: "String", match: (value, contract, dType, depth) => /^[a-zA-Z0-9\s]*$/}
+  fieldName: {dType: "String", isEmail: (value, contract, dType, depth) => contract.contactType === "email"}
 }
 ```
 
-In this case, a function is provided that returns a regular expression. 
-This allows for dynamic determination of the match pattern based on the current state of the field value, the contract, the datatype, and the depth. 
-If the value of `fieldName` does not match the returned regular expression, the validation will fail.
+In this case, a function is provided that returns `true` or `false`.
+This allows for dynamic determination based on the current state of the field value, the contract, the datatype, and the depth.
+
+## What Counts as a Valid Email Address?
+
+`isEmail` uses the [WHATWG HTML specification definition](https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address) of a valid email address — the same definition browsers use for `<input type="email">`. In particular this means:
+
+- Plus addressing is valid: `user+tag@example.com`
+- Top-level domains of any length are valid: `user@company.systems`
+- Dotless domains are considered valid, just like in browsers: `user@localhost`. If you need to require a dot in the domain, add an additional [match](match.md) validation.
+- Internationalized addresses (e.g. umlauts) are not matched; they need to be punycode-encoded first, which is also the behavior of browser email inputs.
+
+The underlying regular expression runs in linear time, so it is safe to use on untrusted input (no catastrophic backtracking / ReDoS).
 
 ## Validation Error Messages
 
-The match validator provides "invalid" as a simple default error message if the field value does not match the specified regular expression.
+The default error message is "must be a valid E-Mail" for `isEmail: true` and "must not be an E-Mail" for `isEmail: false`.
 
-This message can be localized using the translation key `errors:generic` through your `customLocalization` callback.
+These messages can be localized using the translation keys `errors:isEmail.true` and `errors:isEmail.false` through your `customLocalization` callback.
 
 [back to root](../../README.md#Documentation)

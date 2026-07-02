@@ -130,7 +130,7 @@ export default class Contract {
    */
   assign(inputObject, _depth = [], _parsedDepth = [], _currentScope = this.schema) {
     // skip empty assignment
-    if ("" === inputObject || undefined === inputObject) {
+    if ("" === inputObject || undefined === inputObject || null === inputObject) {
       this.isAssignedEmpty = true // some validations may need it
       return
     }
@@ -153,17 +153,17 @@ export default class Contract {
             for (let index = 0; index < inputValue.length; index++) {
               if (undefined === value.arrayOf) console.error("Type of array must be defined in arrayOf: " + _depth.concat(key).join("."))
               if (undefined === value.arrayOf || "string" === typeof value.arrayOf) {
-                this.setValueAtPath(_depth.concat(key).concat(index), inputValue[index] || this._defaultEmptyValueFor(value.arrayOf))
+                this.setValueAtPath(_depth.concat(key).concat(index), inputValue[index] ?? this._defaultEmptyValueFor(value.arrayOf))
               } else if (Array.isArray(value.arrayOf)) {
                 // Array of multiple types
                 const isBasicDataType = !value.arrayOf.some(type => !["String", "Number", "Boolean", "Generic"].includes(type))
                 if (isBasicDataType) {
                   // simply assign the values if they are basic types
-                  this.setValueAtPath(_depth.concat(key).concat(index), inputValue[index] || this._defaultEmptyValueFor(value.arrayOf))
+                  this.setValueAtPath(_depth.concat(key).concat(index), inputValue[index] ?? this._defaultEmptyValueFor(value.arrayOf))
                 } else {
                   // otherwise this is must be Contracts
-                  if ("object" !== typeof inputValue[index]) console.error("Array of objects must be an array of objects! Property: " + _depth.concat(key).join(".") + " Index: " + index)
-                  const requiredContractClass = value.arrayOf.find(contractClass => this._getNameOfClass(contractClass) === inputValue[index]["arrayElementType"])
+                  if (null === inputValue[index] || "object" !== typeof inputValue[index]) console.error("Array of objects must be an array of objects! Property: " + _depth.concat(key).join(".") + " Index: " + index)
+                  const requiredContractClass = value.arrayOf.find(contractClass => this._getNameOfClass(contractClass) === inputValue[index]?.["arrayElementType"])
                   this.setValueAtPath(_depth.concat(key).concat(index), this._createNestedContractForArray(requiredContractClass, inputValue[index]))
                 }
               } else {  // must be a contract, but may fail if nonsense provided

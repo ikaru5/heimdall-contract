@@ -123,9 +123,9 @@ Heimdall uses the following translation key patterns:
       "Array": "must have at least {{minCount}} elements"
     },
     "max": {
-      "String": "must have less than {{maxCount}} characters", 
-      "Number": "must be lower or equal than {{maxCount}}",
-      "Array": "must have less than {{maxCount}} elements"
+      "String": "must have at most {{maxCount}} characters", 
+      "Number": "must be less than or equal to {{maxCount}}",
+      "Array": "must have at most {{maxCount}} elements"
     },
     "only": {
       "singular": "must be \"{{element}}\"",

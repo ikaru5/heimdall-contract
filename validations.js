@@ -96,7 +96,7 @@ export const validationDefinitions = {
           case "Generic":
             return true
           case "Array":
-            return "object" === typeof value && "number" === typeof value.length
+            return value !== null && "object" === typeof value && "number" === typeof value.length
           default:
             console.error("Invalid dType provided: " + dataType)
             return false // should not be reachable unless invalid dType provided
@@ -141,7 +141,7 @@ export const validationDefinitions = {
           case "Generic":
             return undefined !== value && null !== value
           case "Array":
-            return ("object" === typeof value && 0 < value.length)
+            return (null !== value && "object" === typeof value && 0 < value.length)
           default:
             return false // should not be reachable unless invalid dType provided
         }
@@ -204,7 +204,7 @@ export const validationDefinitions = {
       check: ({value, config: mustBeEmail, dType, depth, contract}) => {
         if ("function" === typeof mustBeEmail) mustBeEmail = mustBeEmail(value, contract, dType, depth)
 
-        const isEmail = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value)
+        const isEmail = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(value)
         return mustBeEmail ? isEmail : !isEmail
       },
       /**
@@ -443,9 +443,9 @@ export const validationDefinitions = {
         if (customLocalization) {
           const translationKey = `errors:max.${dType}`
           let fallbackValue = ""
-          if ("String" === dType) fallbackValue = `must have less than ${maxCount} characters`
-          if ("Array" === dType) fallbackValue = `must have less than ${maxCount} elements`
-          if ("Number" === dType) fallbackValue = `must be lower or equal than ${maxCount}`
+          if ("String" === dType) fallbackValue = `must have at most ${maxCount} characters`
+          if ("Array" === dType) fallbackValue = `must have at most ${maxCount} elements`
+          if ("Number" === dType) fallbackValue = `must be less than or equal to ${maxCount}`
           return customLocalization({
             translationKey: translationKey, 
             translationKeys: [translationKey], 
@@ -453,9 +453,9 @@ export const validationDefinitions = {
             context: {value, dType, depth, contract, maxCount}
           })
         }
-        if ("String" === dType) return `must have less than ${maxCount} characters`
-        if ("Array" === dType) return `must have less than ${maxCount} elements`
-        if ("Number" === dType) return `must be lower or equal than ${maxCount}`
+        if ("String" === dType) return `must have at most ${maxCount} characters`
+        if ("Array" === dType) return `must have at most ${maxCount} elements`
+        if ("Number" === dType) return `must be less than or equal to ${maxCount}`
       },
     },
   }

@@ -61,9 +61,9 @@ describe("max validation", () => {
     testContract.valueD = {doesnt: "matter"}
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ["must have less than 5 characters"]},
-      valueB: {messages: ["must be lower or equal than 3"]},
-      valueC: {messages: ["must have less than 3 elements"]},
+      valueA: {messages: ["must have at most 5 characters"]},
+      valueB: {messages: ["must be less than or equal to 3"]},
+      valueC: {messages: ["must have at most 3 elements"]},
     })
   })
 
@@ -94,8 +94,8 @@ describe("max validation", () => {
 
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      arrayField: {messages: ["Custom: must have less than 2 elements"]},
-      numberField: {messages: ["Custom: must be lower or equal than 5"]},
+      arrayField: {messages: ["Custom: must have at most 2 elements"]},
+      numberField: {messages: ["Custom: must be less than or equal to 5"]},
     })
   })
 
