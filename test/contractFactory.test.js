@@ -20,7 +20,16 @@ describe("contractClass factory", () => {
     expect(contract.tags).toStrictEqual([])
 
     expect(contract.isValid()).toBe(false)
-    expect(contract.errors).toStrictEqual({email: {messages: ["not present", "must be a valid E-Mail"]}})
+    expect(contract.errors).toStrictEqual({
+      fields: {
+        email: {
+          issues: [
+            {validation: "presence", message: "not present"},
+            {validation: "isEmail", message: "must be a valid E-Mail"}
+          ]
+        }
+      }
+    })
 
     contract.assign({email: "some@valid.com", age: 30, newsletter: true, tags: ["a", "b"]})
     expect(contract.isValid()).toBe(true)
@@ -58,7 +67,7 @@ describe("contractClass factory", () => {
 
     employee.assign({name: "Rico", staffId: 5})
     expect(employee.isValid()).toBe(false)
-    expect(employee.errors).toStrictEqual({name: {messages: ["is not Oliver"]}})
+    expect(employee.errors).toStrictEqual({fields: {name: {issues: [{validation: "mustBeOliver", message: "is not Oliver"}]}}})
 
     employee.name = "Oliver"
     expect(employee.isValid()).toBe(true)
@@ -88,7 +97,9 @@ describe("contractClass factory", () => {
     order.assign({address: {city: "Berlin"}, previousAddresses: [{city: "Hamburg"}, {city: ""}]})
     expect(order.isValid()).toBe(false)
     expect(order.errors).toStrictEqual({
-      previousAddresses: {1: {city: {messages: ["not present"]}}}
+      fields: {
+        previousAddresses: {elements: {"1": {fields: {city: {issues: [{validation: "presence", message: "not present"}]}}}}}
+      }
     })
   })
 

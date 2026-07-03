@@ -135,40 +135,54 @@ describe("validation context", () => {
     const contract = new ContextContract()
     contract.assign(invalidData)
     expect(contract.isValid("matchAnyContext")).toBe(false)
-    expect(contract.errors).toStrictEqual(
-      {
-        "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]},
-        "number": {"messages": ["must be greater than or equal to 10"]},
-        "string": {"messages": ["invalid"]},
-        "addressSimple": {"plz": {"messages": ["not present"]}},
-        "sub": {
-          "isSomething": {"messages": ['must be "true"']},
-          "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
+    expect(contract.errors).toStrictEqual({
+      fields: {
+        numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]},
+        number: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]},
+        string: {issues: [{validation: "match", message: "invalid"}]},
+        addressSimple: {fields: {plz: {issues: [{validation: "presence", message: "not present"}]}}},
+        sub: {
+          fields: {
+            isSomething: {issues: [{validation: "only", message: "must be \"true\""}]},
+            numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+          }
         },
-        "subsContractedWithInner": {
-          "0": {
-            "isSomething": {"messages": ['"undefined" is not a valid Boolean']},
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
-          },
-          "1": {
-            "isSomething": {"messages": ['must be "true"']},
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
-          },
-          "messages": ["must have at least 3 elements"]
+        subsContractedWithInner: {
+          issues: [{validation: "min", message: "must have at least 3 elements"}],
+          elements: {
+            "0": {
+              fields: {
+                isSomething: {issues: [{validation: "dType", message: "\"undefined\" is not a valid Boolean"}]},
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            },
+            "1": {
+              fields: {
+                isSomething: {issues: [{validation: "only", message: "must be \"true\""}]},
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            }
+          }
         },
-        "subsContracted": {
-          "0": {
-            "isSomething": {"messages": ['"undefined" is not a valid Boolean']},
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
-          },
-          "1": {
-            "isSomething": {"messages": ['must be "true"']},
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
-          },
-          "messages": ["must have at least 3 elements"]
+        subsContracted: {
+          issues: [{validation: "min", message: "must have at least 3 elements"}],
+          elements: {
+            "0": {
+              fields: {
+                isSomething: {issues: [{validation: "dType", message: "\"undefined\" is not a valid Boolean"}]},
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            },
+            "1": {
+              fields: {
+                isSomething: {issues: [{validation: "only", message: "must be \"true\""}]},
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            }
+          }
         }
       }
-    )
+    })
 
     contract.numberWithoutContext = 10
     contract.subsContracted[0].numberWithoutContext = 10
@@ -181,24 +195,30 @@ describe("validation context", () => {
     const contract = new ContextContract()
     contract.assign(invalidData)
     expect(contract.isValid("contextA")).toBe(false)
-    expect(contract.errors).toStrictEqual(
-      {
-        "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]},
-        "number": {"messages": ["must be greater than or equal to 10"]},
-        "string": {"messages": ["invalid"]},
-        "addressSimple": {"plz": {"messages": ["not present"]}},
-        "subsContracted": {
-          "0": {
-            "isSomething": {"messages": ['"undefined" is not a valid Boolean']},
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
-          },
-          "1": {
-            "isSomething": {"messages": ['must be "true"']},
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
+    expect(contract.errors).toStrictEqual({
+      fields: {
+        numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]},
+        number: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]},
+        string: {issues: [{validation: "match", message: "invalid"}]},
+        addressSimple: {fields: {plz: {issues: [{validation: "presence", message: "not present"}]}}},
+        subsContracted: {
+          elements: {
+            "0": {
+              fields: {
+                isSomething: {issues: [{validation: "dType", message: "\"undefined\" is not a valid Boolean"}]},
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            },
+            "1": {
+              fields: {
+                isSomething: {issues: [{validation: "only", message: "must be \"true\""}]},
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            }
           }
         }
       }
-    )
+    })
 
   })
 
@@ -206,33 +226,47 @@ describe("validation context", () => {
     const contract = new ContextContract()
     contract.assign(invalidData)
     expect(contract.isValid("contextB")).toBe(false)
-    expect(contract.errors).toStrictEqual(
-      {
-        "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]},
-        "string": {"messages": ["invalid"]},
-        "sub": {
-          "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
+    expect(contract.errors).toStrictEqual({
+      fields: {
+        numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]},
+        string: {issues: [{validation: "match", message: "invalid"}]},
+        sub: {
+          fields: {
+            numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+          }
         },
-        "subsContractedWithInner": {
-          "0": {
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
-          },
-          "1": {
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
-          },
-          "messages": ["must have at least 3 elements"]
+        subsContractedWithInner: {
+          issues: [{validation: "min", message: "must have at least 3 elements"}],
+          elements: {
+            "0": {
+              fields: {
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            },
+            "1": {
+              fields: {
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            }
+          }
         },
-        "subsContracted": {
-          "0": {
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
-          },
-          "1": {
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
-          },
-          "messages": ["must have at least 3 elements"]
+        subsContracted: {
+          issues: [{validation: "min", message: "must have at least 3 elements"}],
+          elements: {
+            "0": {
+              fields: {
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            },
+            "1": {
+              fields: {
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            }
+          }
         }
       }
-    )
+    })
 
   })
 
@@ -240,40 +274,54 @@ describe("validation context", () => {
     const contract = new ContextContract()
     contract.assign(invalidData)
     expect(contract.isValid(["contextA", "contextB"])).toBe(false)
-    expect(contract.errors).toStrictEqual(
-      {
-        "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]},
-        "number": {"messages": ["must be greater than or equal to 10"]},
-        "string": {"messages": ["invalid"]},
-        "addressSimple": {"plz": {"messages": ["not present"]}},
-        "sub": {
-          "isSomething": {"messages": ['must be "true"']},
-          "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
+    expect(contract.errors).toStrictEqual({
+      fields: {
+        numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]},
+        number: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]},
+        string: {issues: [{validation: "match", message: "invalid"}]},
+        addressSimple: {fields: {plz: {issues: [{validation: "presence", message: "not present"}]}}},
+        sub: {
+          fields: {
+            isSomething: {issues: [{validation: "only", message: "must be \"true\""}]},
+            numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+          }
         },
-        "subsContractedWithInner": {
-          "0": {
-            "isSomething": {"messages": ['"undefined" is not a valid Boolean']},
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
-          },
-          "1": {
-            "isSomething": {"messages": ['must be "true"']},
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
-          },
-          "messages": ["must have at least 3 elements"]
+        subsContractedWithInner: {
+          issues: [{validation: "min", message: "must have at least 3 elements"}],
+          elements: {
+            "0": {
+              fields: {
+                isSomething: {issues: [{validation: "dType", message: "\"undefined\" is not a valid Boolean"}]},
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            },
+            "1": {
+              fields: {
+                isSomething: {issues: [{validation: "only", message: "must be \"true\""}]},
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            }
+          }
         },
-        "subsContracted": {
-          "0": {
-            "isSomething": {"messages": ['"undefined" is not a valid Boolean']},
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
-          },
-          "1": {
-            "isSomething": {"messages": ['must be "true"']},
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
-          },
-          "messages": ["must have at least 3 elements"]
+        subsContracted: {
+          issues: [{validation: "min", message: "must have at least 3 elements"}],
+          elements: {
+            "0": {
+              fields: {
+                isSomething: {issues: [{validation: "dType", message: "\"undefined\" is not a valid Boolean"}]},
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            },
+            "1": {
+              fields: {
+                isSomething: {issues: [{validation: "only", message: "must be \"true\""}]},
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            }
+          }
         }
       }
-    )
+    })
 
   })
 
@@ -281,23 +329,29 @@ describe("validation context", () => {
     const contract = new ContextContract()
     contract.assign(invalidData)
     expect(contract.isValid(["contextA", "someDifferent"])).toBe(false)
-    expect(contract.errors).toStrictEqual(
-      {
-        "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]},
-        "number": {"messages": ["must be greater than or equal to 10"]},
-        "string": {"messages": ["invalid"]},
-        "addressSimple": {"plz": {"messages": ["not present"]}},
-        "subsContracted": {
-          "0": {
-            "isSomething": {"messages": ['"undefined" is not a valid Boolean']},
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
-          },
-          "1": {
-            "isSomething": {"messages": ['must be "true"']},
-            "numberWithoutContext": {"messages": ["must be greater than or equal to 10"]}
+    expect(contract.errors).toStrictEqual({
+      fields: {
+        numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]},
+        number: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]},
+        string: {issues: [{validation: "match", message: "invalid"}]},
+        addressSimple: {fields: {plz: {issues: [{validation: "presence", message: "not present"}]}}},
+        subsContracted: {
+          elements: {
+            "0": {
+              fields: {
+                isSomething: {issues: [{validation: "dType", message: "\"undefined\" is not a valid Boolean"}]},
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            },
+            "1": {
+              fields: {
+                isSomething: {issues: [{validation: "only", message: "must be \"true\""}]},
+                numberWithoutContext: {issues: [{validation: "min", message: "must be greater than or equal to 10"}]}
+              }
+            }
           }
         }
       }
-    )
+    })
   })
 })

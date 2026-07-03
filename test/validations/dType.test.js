@@ -35,7 +35,7 @@ describe("dType validation", () => {
     testContract.valueF = "doesnt matter"
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      valueF: {messages: ['"doesnt matter" is not a valid Invalid']},
+      fields: {valueF: {issues: [{validation: "dType", message: "\"doesnt matter\" is not a valid Invalid"}]}}
     })
   })
 
@@ -49,11 +49,13 @@ describe("dType validation", () => {
     testContract.valueF = "doesnt matter"
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ['"123" is not a valid String']},
-      valueB: {messages: ['"Some valid value" is not a valid Number']},
-      valueC: {messages: ['"321" is not a valid Boolean']},
-      valueE: {messages: ['"123" is not a valid Array']},
-      valueF: {messages: ['"doesnt matter" is not a valid Invalid']},
+      fields: {
+        valueA: {issues: [{validation: "dType", message: "\"123\" is not a valid String"}]},
+        valueB: {issues: [{validation: "dType", message: "\"Some valid value\" is not a valid Number"}]},
+        valueC: {issues: [{validation: "dType", message: "\"321\" is not a valid Boolean"}]},
+        valueE: {issues: [{validation: "dType", message: "\"123\" is not a valid Array"}]},
+        valueF: {issues: [{validation: "dType", message: "\"doesnt matter\" is not a valid Invalid"}]}
+      }
     })
   })
 })

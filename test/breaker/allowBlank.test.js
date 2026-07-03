@@ -39,9 +39,11 @@ describe("allowBlank breaker", () => {
     testContract.valueE = ""
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ["must have at least 10 characters"]},
-      valueB: {messages: ["must have at least 10 characters"]},
-      valueE: {messages: ["must have at least 10 characters"]},
+      fields: {
+        valueA: {issues: [{validation: "min", message: "must have at least 10 characters"}]},
+        valueB: {issues: [{validation: "min", message: "must have at least 10 characters"}]},
+        valueE: {issues: [{validation: "min", message: "must have at least 10 characters"}]}
+      }
     })
   })
 })

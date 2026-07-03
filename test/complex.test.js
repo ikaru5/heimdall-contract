@@ -93,26 +93,32 @@ describe("validation", () => {
 
     const emptyErrorsAfterValidationObject =
       {
-        email: {messages: ["not present", 'must be a valid E-Mail']},
-        username: {messages: ["not present", 'must have at least 8 characters']},
-        password: {messages: ["not present", 'must have at least 8 characters']},
-        passwordRepeat: {messages: ["not present"]},
-        agb: {messages: ['errors:mustBeAccepted']},
-        addressSimple: {
-          street: {messages: ["not present"]},
-          streetNumber: {messages: ["not present", '"null" is not a valid Number']},
-          plz: {messages: ["not present"]},
-          city: {messages: ["not present"]}
-        },
-        names: {messages: ['must have at least 3 elements', "not present"]},
-        address: {
-          street: {messages: ["not present"]},
-          streetNumber: {messages: ['"null" is not a valid Number', "not present"]},
-          plz: {messages: ["not present"]},
-          city: {messages: ["not present"]},
-        },
-        addressesContracted: {messages: ['must have at least 3 elements']},
-        addressesContractedWithin: {messages: ['must have at least 3 elements']}
+        fields: {
+          email: {issues: [{validation: "presence", message: "not present"}, {validation: "isEmail", message: 'must be a valid E-Mail'}]},
+          username: {issues: [{validation: "presence", message: "not present"}, {validation: "min", message: 'must have at least 8 characters'}]},
+          password: {issues: [{validation: "presence", message: "not present"}, {validation: "min", message: 'must have at least 8 characters'}]},
+          passwordRepeat: {issues: [{validation: "presence", message: "not present"}]},
+          agb: {issues: [{validation: "only", message: 'errors:mustBeAccepted'}]},
+          addressSimple: {
+            fields: {
+              street: {issues: [{validation: "presence", message: "not present"}]},
+              streetNumber: {issues: [{validation: "presence", message: "not present"}, {validation: "dType", message: '"null" is not a valid Number'}]},
+              plz: {issues: [{validation: "presence", message: "not present"}]},
+              city: {issues: [{validation: "presence", message: "not present"}]}
+            }
+          },
+          names: {issues: [{validation: "min", message: 'must have at least 3 elements'}, {validation: "presence", message: "not present"}]},
+          address: {
+            fields: {
+              street: {issues: [{validation: "presence", message: "not present"}]},
+              streetNumber: {issues: [{validation: "dType", message: '"null" is not a valid Number'}, {validation: "presence", message: "not present"}]},
+              plz: {issues: [{validation: "presence", message: "not present"}]},
+              city: {issues: [{validation: "presence", message: "not present"}]},
+            }
+          },
+          addressesContracted: {issues: [{validation: "min", message: 'must have at least 3 elements'}]},
+          addressesContractedWithin: {issues: [{validation: "min", message: 'must have at least 3 elements'}]}
+        }
       }
 
     expect(signUpContract.toObject()).toStrictEqual(emptyObject)
@@ -167,40 +173,60 @@ describe("validation", () => {
     }
 
     const errorsObject = {
-      email: {messages: ['must be a valid E-Mail']},
-      username: {messages: ['must have at least 8 characters']},
-      password: {messages: ['must have at least 8 characters']},
-      passwordRepeat: {messages: ['errors:passwordsNotMatching']},
-      agb: {messages: ['errors:mustBeAccepted']},
-      addressSimple: {
-        street: {messages: ["not present"]},
-      },
-      names: {
-        '1': {messages: ["not present", "must have at least 3 characters"]},
-        messages: ['must have at least 3 elements']
-      },
-      address: {
-        street: {messages: ["not present"]},
-      },
-      addressesContracted: {
-        '0': {
-          streetNumber: {messages: ['"361" is not a valid Number', "not present"]},
-          city: {messages: ["not present"]}
+      fields: {
+        email: {issues: [{validation: "isEmail", message: 'must be a valid E-Mail'}]},
+        username: {issues: [{validation: "min", message: 'must have at least 8 characters'}]},
+        password: {issues: [{validation: "min", message: 'must have at least 8 characters'}]},
+        passwordRepeat: {issues: [{validation: "validate", message: 'errors:passwordsNotMatching'}]},
+        agb: {issues: [{validation: "only", message: 'errors:mustBeAccepted'}]},
+        addressSimple: {
+          fields: {
+            street: {issues: [{validation: "presence", message: "not present"}]},
+          }
         },
-        '1': {
-          street: {messages: ["not present"]},
+        names: {
+          issues: [{validation: "min", message: 'must have at least 3 elements'}],
+          elements: {
+            1: {issues: [{validation: "presence", message: "not present"}, {validation: "min", message: "must have at least 3 characters"}]},
+          }
         },
-        messages: ['must have at least 3 elements']
-      },
-      addressesContractedWithin: {
-        '0': {
-          streetNumber: {messages: ["not present", '"3612" is not a valid Number']},
-          city: {messages: ["not present"]}
+        address: {
+          fields: {
+            street: {issues: [{validation: "presence", message: "not present"}]},
+          }
         },
-        '1': {
-          street: {messages: ["not present"]},
+        addressesContracted: {
+          issues: [{validation: "min", message: 'must have at least 3 elements'}],
+          elements: {
+            0: {
+              fields: {
+                streetNumber: {issues: [{validation: "dType", message: '"361" is not a valid Number'}, {validation: "presence", message: "not present"}]},
+                city: {issues: [{validation: "presence", message: "not present"}]}
+              }
+            },
+            1: {
+              fields: {
+                street: {issues: [{validation: "presence", message: "not present"}]},
+              }
+            },
+          }
         },
-        messages: ['must have at least 3 elements']
+        addressesContractedWithin: {
+          issues: [{validation: "min", message: 'must have at least 3 elements'}],
+          elements: {
+            0: {
+              fields: {
+                streetNumber: {issues: [{validation: "presence", message: "not present"}, {validation: "dType", message: '"3612" is not a valid Number'}]},
+                city: {issues: [{validation: "presence", message: "not present"}]}
+              }
+            },
+            1: {
+              fields: {
+                street: {issues: [{validation: "presence", message: "not present"}]},
+              }
+            },
+          }
+        }
       }
     }
 
@@ -227,8 +253,10 @@ describe("validation", () => {
 
     const emptyObject = { _email: '', username: '' }
     const emptyErrorsAfterValidationObject = {
-      _email: {messages: ["not present", 'must be a valid E-Mail']},
-      username: {messages: ["not present", 'must have at least 8 characters']}
+      fields: {
+        _email: {issues: [{validation: "presence", message: "not present"}, {validation: "isEmail", message: 'must be a valid E-Mail'}]},
+        username: {issues: [{validation: "presence", message: "not present"}, {validation: "min", message: 'must have at least 8 characters'}]}
+      }
     }
 
     expect(signUpContract.toObject()).toStrictEqual(emptyObject)
@@ -245,7 +273,9 @@ describe("validation", () => {
     const signUpContract2 = new ContractBase({schema, ignoreUnderscoredFields: true})
     const emptyObject2 = { username: '' }
     const emptyErrorsAfterValidationObject2 = {
-      username: {messages: ["not present", 'must have at least 8 characters']}
+      fields: {
+        username: {issues: [{validation: "presence", message: "not present"}, {validation: "min", message: 'must have at least 8 characters'}]}
+      }
     }
 
     expect(signUpContract2.toObject()).toStrictEqual(emptyObject2)

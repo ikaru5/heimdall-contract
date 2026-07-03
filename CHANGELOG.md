@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Versions before 0.7.0 were not tracked in this changelog.
 
+## [0.10.0] - 2026-07-03
+
+### Changed
+
+- **BREAKING**: the `errors` object was redesigned. Each node now separates its own failures,
+  erroneous child fields and erroneous array elements into three namespaces (`issues`, `fields`,
+  `elements`) instead of mixing message arrays with field keys. This removes the `messages`
+  reserved word (a field could never be named `messages` before) and the ambiguous mixing of
+  array element keys with the outer `messages`. Each failure is now an object `{validation, message}`
+  carrying the name of the failed validation, not a bare string. See [Errors](doc/errors.md).
+
+  Migration: `errors.email.messages` -> `errors.fields.email.issues.map(i => i.message)`;
+  nested `errors.address.street` -> `errors.fields.address.fields.street`; array elements
+  `errors.items[0]` -> `errors.fields.items.elements[0]`, with the outer array errors under
+  `errors.fields.items.issues`. In most cases the new `errorsAt(path)` and `flatErrors()`
+  helpers replace manual traversal entirely.
+
+### Added
+
+- `errorsAt(path)`: returns the error node at a field path (dotted string or array, array
+  elements addressed by index), or `undefined`. The form friendly way to read field errors.
+- `flatErrors()`: returns all errors as a flat list of `{path, validation, message}`.
+- Type inference for the `errors` tree of factory built contracts (`InferErrors`), and the
+  `Issue` / `ErrorNode` / `FlatError` types exported from the types subpath.
+
 ## [0.9.0] - 2026-07-02
 
 ### Added

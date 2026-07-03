@@ -32,9 +32,7 @@ describe("validateIf breaker", () => {
     ReturnStub.returnValue = true
     testContract.valueA = "invalid"
     expect(testContract.isValid()).toBe(false)
-    expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ["must have at least 10 characters"]},
-    })
+    expect(testContract.errors).toStrictEqual({fields: {valueA: {issues: [{validation: "min", message: "must have at least 10 characters"}]}}})
   })
 
   it('handles custom validateIf function that returns false and outbreaks validation', () => {
@@ -67,6 +65,6 @@ describe("validateIf breaker", () => {
     // Test when validateIf returns true but validation fails
     testContract.valueB = ""
     expect(testContract.isValid()).toBe(false)
-    expect(testContract.errors.valueB.messages).toContain("not present")
+    expect(testContract.errors.fields.valueB.issues.map((issue) => issue.message)).toContain("not present")
   })
 })

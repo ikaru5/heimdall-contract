@@ -32,9 +32,7 @@ describe("custom validate", () => {
     testContract.valueA = "abc"
     ReturnStub.returnValue = false
     expect(testContract.isValid()).toBe(false)
-    expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ["Field invalid!"]},
-    })
+    expect(testContract.errors).toStrictEqual({fields: {valueA: {issues: [{validation: "validate", message: "Field invalid!"}]}}})
   })
 
   it('fails and returns custom error message', () => {
@@ -42,9 +40,7 @@ describe("custom validate", () => {
     testContract.valueA = "abc"
     ReturnStub.returnValue = "some error message"
     expect(testContract.isValid()).toBe(false)
-    expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ["some error message"]},
-    })
+    expect(testContract.errors).toStrictEqual({fields: {valueA: {issues: [{validation: "validate", message: "some error message"}]}}})
   })
 
   it('fails and returns generic error when validate returns non-string non-boolean', () => {
@@ -52,8 +48,6 @@ describe("custom validate", () => {
     testContract.valueA = "abc"
     ReturnStub.returnValue = undefined
     expect(testContract.isValid()).toBe(false)
-    expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ["Field invalid!"]},
-    })
+    expect(testContract.errors).toStrictEqual({fields: {valueA: {issues: [{validation: "validate", message: "Field invalid!"}]}}})
   })
 })

@@ -5,7 +5,7 @@
  */
 
 import type Contract from "./index.js"
-import type {ContractClass, ContractObject, InferContract, InferObject, ObjectTypeBrand, Options, Schema, ValidateSchema} from "./types.js"
+import type {ContractClass, ContractObject, InferContract, InferErrors, InferObject, ObjectTypeBrand, Options, Schema, ValidateSchema} from "./types.js"
 
 /**
  * The toObject() return type contributed by the base class: nothing for the plain
@@ -22,6 +22,7 @@ type BaseObject<B extends ContractClass> =
  */
 type FactoryInstance<S extends Schema, B extends ContractClass> =
   {toObject(): InferObject<S> & BaseObject<B>} &
+  {errors: InferErrors<S>} & // intersects with the base ErrorNode: known field keys stay precise, unknown keys are not rejected
   InstanceType<B> &
   InferContract<S> &
   ObjectTypeBrand<InferObject<S> & BaseObject<B>>

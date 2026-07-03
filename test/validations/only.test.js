@@ -36,7 +36,9 @@ describe("only validation", () => {
     testContract.valueD = ["Tim", "Tom", "Tim", "Tom"]
     testContract.valueE = ""
     expect(testContract.isValid()).toBe(false)
-    expect(testContract.errors).toStrictEqual({valueB: {messages: ['"undefined" is not a valid String']}})
+    expect(testContract.errors).toStrictEqual({
+      fields: {valueB: {issues: [{validation: "dType", message: "\"undefined\" is not a valid String"}]}}
+    })
   })
 
   it('validates with invalid values', () => {
@@ -48,11 +50,13 @@ describe("only validation", () => {
     testContract.valueE = "Tina"
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ['must be "only valid value"']},
-      valueB: {messages: ['must be "Tim" or "Tom"']},
-      valueC: {messages: ['must be "Tim" or "Tom"']},
-      valueD: {messages: ['must be "Tim" or "Tom"']},
-      valueE: {messages: ['must be "Tim"']},
+      fields: {
+        valueA: {issues: [{validation: "only", message: "must be \"only valid value\""}]},
+        valueB: {issues: [{validation: "only", message: "must be \"Tim\" or \"Tom\""}]},
+        valueC: {issues: [{validation: "only", message: "must be \"Tim\" or \"Tom\""}]},
+        valueD: {issues: [{validation: "only", message: "must be \"Tim\" or \"Tom\""}]},
+        valueE: {issues: [{validation: "only", message: "must be \"Tim\""}]}
+      }
     })
   })
 })

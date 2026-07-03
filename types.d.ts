@@ -207,10 +207,35 @@ export interface AdditionalValidations {
   normal: Record<string, ValidationDefinition>
 }
 
-/** The errors object of a contract after isValid(): messages per field, nested like the schema. */
-export interface ValidationErrors {
-  messages?: Array<string>
-  [field: string]: ValidationErrors | Array<string> | undefined
+/** A single validation failure. */
+export interface Issue {
+  /** Name of the failed validation, e.g. "presence", "min" or "validate" for custom validations. */
+  validation: string
+  /** The final, possibly localized error message. */
+  message: string
+}
+
+/**
+ * A node of the errors tree after isValid().
+ *
+ * Own failures, erroneous child fields and erroneous array elements live in separate
+ * namespaces, so schema field names can never collide with structural keys:
+ * `errors.fields.address.fields.street.issues` or `errors.fields.items.elements[0]`.
+ * Only namespaces that actually contain errors are present.
+ */
+export interface ErrorNode {
+  /** Failures of this node itself. */
+  issues?: Array<Issue>
+  /** Erroneous child fields by field name (only erroneous fields are present). */
+  fields?: {[field: string]: ErrorNode | undefined}
+  /** Erroneous array elements by index (sparse). */
+  elements?: {[index: number]: ErrorNode | undefined}
+}
+
+/** A flattened error entry as returned by flatErrors(). */
+export interface FlatError extends Issue {
+  /** Path to the erroneous field, array indices as numbers: ["items", 0, "name"]. */
+  path: Array<string | number>
 }
 
 // ---------------------------------------------------------------------------------------
@@ -319,6 +344,39 @@ type InferNestedObject<C> =
   C extends ContractClass ? ContractObject<InstanceType<C>> :
   C extends Schema ? InferObject<C> :
   never
+
+/**
+ * Derives the precise errors tree type of a contract from its schema - fields keys
+ * autocomplete, array fields carry elements, nested contracts contribute their own
+ * inferred errors type.
+ */
+export type InferErrors<S extends Schema> = {
+  issues?: Array<Issue>
+  fields?: {[K in keyof S]?: InferErrorNode<S[K]>}
+}
+
+/** Derives the error node type of a single schema node. */
+type InferErrorNode<F> =
+  F extends {dType: "Array", arrayOf: infer A} ? {issues?: Array<Issue>, elements?: Record<number, InferElementErrors<A>>} :
+  F extends {dType: "Array"} ? {issues?: Array<Issue>, elements?: Record<number, ErrorNode>} :
+  F extends {dType: "Contract", contract: infer C} ? InferNestedErrors<C> :
+  F extends {dType: any} ? {issues?: Array<Issue>} :
+  F extends Schema ? {fields?: {[K in keyof F]?: InferErrorNode<F[K]>}} :
+  never
+
+/** Derives the error node type of an array element. */
+type InferElementErrors<A> =
+  A extends BasicDtype | ReadonlyArray<BasicDtype> ? {issues?: Array<Issue>} :
+  A extends ContractClass ? InstanceType<A>["errors"] :
+  A extends ReadonlyArray<infer E> ? (E extends ContractClass ? InstanceType<E>["errors"] : ErrorNode) :
+  A extends Schema ? InferErrors<A> :
+  ErrorNode
+
+/** Derives the error node type of a nested contract config. */
+type InferNestedErrors<C> =
+  C extends ContractClass ? InstanceType<C>["errors"] :
+  C extends Schema ? InferErrors<C> :
+  ErrorNode
 
 declare const objectType: unique symbol
 

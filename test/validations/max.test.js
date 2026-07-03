@@ -36,9 +36,11 @@ describe("max validation", () => {
     testContract.valueD = {doesnt: "matter"}
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ['"123" is not a valid String']},
-      valueB: {messages: ['"3" is not a valid Number']},
-      valueC: {messages: ['"321" is not a valid Array']},
+      fields: {
+        valueA: {issues: [{validation: "dType", message: "\"123\" is not a valid String"}]},
+        valueB: {issues: [{validation: "dType", message: "\"3\" is not a valid Number"}]},
+        valueC: {issues: [{validation: "dType", message: "\"321\" is not a valid Array"}]}
+      }
     })
 
     testContract.valueA = undefined
@@ -47,9 +49,11 @@ describe("max validation", () => {
     testContract.valueD = undefined
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ['"undefined" is not a valid String']},
-      valueB: {messages: ['"null" is not a valid Number']},
-      valueC: {messages: ['"undefined" is not a valid Array']},
+      fields: {
+        valueA: {issues: [{validation: "dType", message: "\"undefined\" is not a valid String"}]},
+        valueB: {issues: [{validation: "dType", message: "\"null\" is not a valid Number"}]},
+        valueC: {issues: [{validation: "dType", message: "\"undefined\" is not a valid Array"}]}
+      }
     })
   })
 
@@ -61,9 +65,11 @@ describe("max validation", () => {
     testContract.valueD = {doesnt: "matter"}
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ["must have at most 5 characters"]},
-      valueB: {messages: ["must be less than or equal to 3"]},
-      valueC: {messages: ["must have at most 3 elements"]},
+      fields: {
+        valueA: {issues: [{validation: "max", message: "must have at most 5 characters"}]},
+        valueB: {issues: [{validation: "max", message: "must be less than or equal to 3"}]},
+        valueC: {issues: [{validation: "max", message: "must have at most 3 elements"}]}
+      }
     })
   })
 
@@ -94,8 +100,10 @@ describe("max validation", () => {
 
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      arrayField: {messages: ["Custom: must have at most 2 elements"]},
-      numberField: {messages: ["Custom: must be less than or equal to 5"]},
+      fields: {
+        arrayField: {issues: [{validation: "max", message: "Custom: must have at most 2 elements"}]},
+        numberField: {issues: [{validation: "max", message: "Custom: must be less than or equal to 5"}]}
+      }
     })
   })
 
@@ -121,9 +129,7 @@ describe("max validation", () => {
     spy.mockClear() // scope the assertion to this validation only (ignore output of earlier tests)
     // both fields are empty (null) by default - max must not complain about them
     expect(testContract.isValid()).toBe(false) // invalid only because "required" has presence
-    expect(testContract.errors).toStrictEqual({
-      required: {messages: ["not present"]}
-    })
+    expect(testContract.errors).toStrictEqual({fields: {required: {issues: [{validation: "presence", message: "not present"}]}}})
     // empty values no longer trigger the "Invalid dType ... for maximum validation" console error
     expect(spy).not.toHaveBeenCalled()
 

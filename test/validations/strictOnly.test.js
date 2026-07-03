@@ -37,8 +37,10 @@ describe("strictOnly validation", () => {
     testContract.valueE = ""
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      valueB: {messages: ['"undefined" is not a valid String']},
-      valueD: {messages: ['must be "Tim"']},
+      fields: {
+        valueB: {issues: [{validation: "dType", message: "\"undefined\" is not a valid String"}]},
+        valueD: {issues: [{validation: "strictOnly", message: "must be \"Tim\""}]}
+      }
     })
   })
 
@@ -51,11 +53,13 @@ describe("strictOnly validation", () => {
     testContract.valueE = "Tina"
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ['must be "only valid value"']},
-      valueB: {messages: ['must be "Tim" or "Tom"']},
-      valueC: {messages: ['must be "Tim,Tom"']},
-      valueD: {messages: ['must be "Tim"']},
-      valueE: {messages: ['must be "Tim"']},
+      fields: {
+        valueA: {issues: [{validation: "strictOnly", message: "must be \"only valid value\""}]},
+        valueB: {issues: [{validation: "strictOnly", message: "must be \"Tim\" or \"Tom\""}]},
+        valueC: {issues: [{validation: "strictOnly", message: "must be \"Tim,Tom\""}]},
+        valueD: {issues: [{validation: "strictOnly", message: "must be \"Tim\""}]},
+        valueE: {issues: [{validation: "strictOnly", message: "must be \"Tim\""}]}
+      }
     })
   })
 })

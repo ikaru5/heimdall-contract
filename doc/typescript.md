@@ -192,6 +192,23 @@ matching the [ignoreUnderscoredFields](configuration.md) runtime behavior:
 email: {dType: "String", presence: true, _label: "E-Mail address"}
 ```
 
+### Typed errors
+
+For factory built contracts the `errors` tree is inferred from the schema: `fields` keys autocomplete,
+array fields carry `elements`, and nested contracts contribute their own error types. See
+[Errors](errors.md) for the structure and the `errorsAt` / `flatErrors` helpers.
+
+```typescript
+const contract = new SignupContract()
+contract.errors.fields?.email?.issues        // Array<Issue> | undefined
+contract.errors.fields?.address?.fields?.street?.issues
+contract.errorsAt("address.street")?.issues
+contract.flatErrors()                         // Array<{path, validation, message}>
+```
+
+Note: known field keys are precise, but because the `errors` type stays assignable to the base
+`ErrorNode`, an unknown key is not rejected by the compiler (it resolves to `ErrorNode | undefined`).
+
 ## Useful Types
 
 Everything is exported from `@ikaru5/heimdall-contract/types`:
@@ -200,7 +217,7 @@ Everything is exported from `@ikaru5/heimdall-contract/types`:
 - `Dtype` / `BasicDtype` - the data type unions
 - `AdditionalValidations` / `ValidationDefinition` / `CheckParams` / `MessageParams` - for custom validations
 - `CustomLocalization` / `CustomLocalizationParams` - for localization callbacks
-- `ValidationErrors` - the shape of `contract.errors`
+- `ErrorNode` / `Issue` / `FlatError` - the shape of `contract.errors` and `flatErrors()`
 - `Options` / `ContractConfig` - constructor options and configuration
 
 `SchemaError` is a runtime class and exported from the main module:

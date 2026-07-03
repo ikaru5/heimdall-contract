@@ -53,15 +53,37 @@ describe("presence validation", () => {
     testContract.valueI = undefined
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ["not present"]},
-      valueB: {messages: ['"undefined" is not a valid String']},
-      valueC: {messages: ['"null" is not a valid String', "not present"]},
-      valueD: {messages: ['"undefined" is not a valid Number', "not present"]},
-      valueE: {messages: ['"undefined" is not a valid Boolean', "not present"]},
-      valueF: {messages: ["not present"]},
-      valueG: {messages: ["not present"]},
-      valueH: {messages: ["not present"]},
-      valueI: {messages: ['"undefined" is not a valid Array', "not present"]},
+      fields: {
+        valueA: {issues: [{validation: "presence", message: "not present"}]},
+        valueB: {issues: [{validation: "dType", message: "\"undefined\" is not a valid String"}]},
+        valueC: {
+          issues: [
+            {validation: "dType", message: "\"null\" is not a valid String"},
+            {validation: "presence", message: "not present"}
+          ]
+        },
+        valueD: {
+          issues: [
+            {validation: "dType", message: "\"undefined\" is not a valid Number"},
+            {validation: "presence", message: "not present"}
+          ]
+        },
+        valueE: {
+          issues: [
+            {validation: "dType", message: "\"undefined\" is not a valid Boolean"},
+            {validation: "presence", message: "not present"}
+          ]
+        },
+        valueF: {issues: [{validation: "presence", message: "not present"}]},
+        valueG: {issues: [{validation: "presence", message: "not present"}]},
+        valueH: {issues: [{validation: "presence", message: "not present"}]},
+        valueI: {
+          issues: [
+            {validation: "dType", message: "\"undefined\" is not a valid Array"},
+            {validation: "presence", message: "not present"}
+          ]
+        }
+      }
     })
   })
 
@@ -93,7 +115,14 @@ describe("presence validation", () => {
     expect(() => testContract.isValid()).not.toThrow()
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      values: {messages: ['"null" is not a valid Array', "not present"]},
+      fields: {
+        values: {
+          issues: [
+            {validation: "dType", message: "\"null\" is not a valid Array"},
+            {validation: "presence", message: "not present"}
+          ]
+        }
+      }
     })
   })
 })

@@ -147,6 +147,8 @@ const isValidState = userContract.isValidState
 console.log(userContract.errors)
 ```
 
+See [Errors](errors.md) for the structure of the errors object and the `errorsAt` / `flatErrors` helpers.
+
 ### Reading/Rendering assigned data
 
 Reading is as simple as assigning data. Just read the properties of the contract instance or use the `toObject` method.

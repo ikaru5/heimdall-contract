@@ -35,10 +35,12 @@ describe("absence validation", () => {
     testContract.valueH = []
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ['"undefined" is not a valid String']},
-      valueD: {messages: ['"undefined" is not a valid Number']},
-      valueE: {messages: ['"undefined" is not a valid Boolean']},
-      valueG: {messages: ['"undefined" is not a valid Array']},
+      fields: {
+        valueA: {issues: [{validation: "dType", message: "\"undefined\" is not a valid String"}]},
+        valueD: {issues: [{validation: "dType", message: "\"undefined\" is not a valid Number"}]},
+        valueE: {issues: [{validation: "dType", message: "\"undefined\" is not a valid Boolean"}]},
+        valueG: {issues: [{validation: "dType", message: "\"undefined\" is not a valid Array"}]}
+      }
     })
   })
 
@@ -54,14 +56,16 @@ describe("absence validation", () => {
     testContract.valueH = [2]
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ["must be absent"]},
-      valueB: {messages: ['"null" is not a valid String']},
-      valueC: {messages: ["must be absent"]},
-      valueD: {messages: ["must be absent"]},
-      valueE: {messages: ["must be absent"]},
-      valueF: {messages: ["must be absent"]},
-      valueG: {messages: ["must be absent"]},
-      valueH: {messages: ["must be absent"]},
+      fields: {
+        valueA: {issues: [{validation: "absence", message: "must be absent"}]},
+        valueB: {issues: [{validation: "dType", message: "\"null\" is not a valid String"}]},
+        valueC: {issues: [{validation: "absence", message: "must be absent"}]},
+        valueD: {issues: [{validation: "absence", message: "must be absent"}]},
+        valueE: {issues: [{validation: "absence", message: "must be absent"}]},
+        valueF: {issues: [{validation: "absence", message: "must be absent"}]},
+        valueG: {issues: [{validation: "absence", message: "must be absent"}]},
+        valueH: {issues: [{validation: "absence", message: "must be absent"}]}
+      }
     })
   })
 })

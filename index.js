@@ -13,7 +13,8 @@ export { contractClass } from "./contract-factory.js"
  * @typedef {import('./types.js').Dtype} Dtype
  * @typedef {import('./types.js').ContractConfig} ContractConfig
  * @typedef {import('./types.js').AdditionalValidations} AdditionalValidations
- * @typedef {import('./types.js').ValidationErrors} ValidationErrors
+ * @typedef {import('./types.js').ErrorNode} ErrorNode
+ * @typedef {import('./types.js').FlatError} FlatError
  * @typedef {import('./types.js').ContractClass} ContractClass
  */
 
@@ -79,7 +80,7 @@ export default class Contract {
     // structural schema lint - keywords are linted later on isValid, when inherited validations are known
     this._reportSchemaProblems(this._lintSchemaStructure(this.schema, [], []))
 
-    /** @type {ValidationErrors} */
+    /** @type {ErrorNode} */
     this.errors = {}
     this.init()
     if ("function" === typeof options?.initNested) {
@@ -151,6 +152,43 @@ export default class Contract {
     this._validationContext = context
     this._validate()
     return this.isValidState
+  }
+
+  /**
+   * Returns the error node at a field path - the form friendly way to read errors.
+   * Array elements are addressed by their index: "items.0.name" or ["items", 0, "name"].
+   * @param {string | Array<string|number>} path
+   * @returns {ErrorNode | undefined} the node, or undefined if there are no errors at the path
+   */
+  errorsAt(path) {
+    const segments = Array.isArray(path) ? path : path.split(".")
+    let node = this.errors
+    for (const segment of segments) {
+      // a node has either erroneous fields or erroneous elements, never both
+      node = node.fields?.[segment] ?? node.elements?.[segment]
+      if (undefined === node) return undefined
+    }
+    return node
+  }
+
+  /**
+   * Returns all errors as a flat list - handy for toasts, logging or summaries.
+   * @param {ErrorNode} [_node] - private - used for recursion
+   * @param {Array<string|number>} [_path] - private - used for recursion
+   * @param {Array<FlatError>} [_out] - private - used for recursion
+   * @returns {Array<FlatError>} entries with path (array indices as numbers), validation and message
+   */
+  flatErrors(_node = this.errors, _path = [], _out = []) {
+    if (undefined !== _node.issues) {
+      for (const issue of _node.issues) _out.push({path: _path, validation: issue.validation, message: issue.message})
+    }
+    if (undefined !== _node.fields) {
+      for (const key of Object.keys(_node.fields)) this.flatErrors(_node.fields[key], _path.concat(key), _out)
+    }
+    if (undefined !== _node.elements) {
+      for (const key of Object.keys(_node.elements)) this.flatErrors(_node.elements[key], _path.concat(Number(key)), _out)
+    }
+    return _out
   }
 
   /**

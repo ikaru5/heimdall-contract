@@ -75,7 +75,11 @@ const validMulti: boolean = contract.isValid(["signup", "profile"])
 
 contract.assign({email: "some@valid.com", tags: ["ab", "cd"]})
 const rendered: Record<string, unknown> = contract.toObject()
-const messages: Array<string> | undefined = contract.errors.email && !Array.isArray(contract.errors.email) ? contract.errors.email.messages : undefined
+// a handwritten class has the base ErrorNode errors type (fields not narrowed to schema keys)
+const emailIssues = contract.errors.fields?.email?.issues
+const firstMessage: string | undefined = emailIssues?.[0].message
+const flatErrors = contract.flatErrors()
+const flatPath: Array<string | number> = flatErrors[0].path
 
 const inline = new ContractBase({schema: {name: {dType: "String"}}, strictSchema: false, ignoreUnderscoredFields: true})
 

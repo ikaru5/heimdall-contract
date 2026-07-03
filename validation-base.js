@@ -87,10 +87,27 @@ export const validateArray = function (depth, propertyConfiguration, key) {
       elements[index]._parseParent(this) // set parent and its attributes like localization method
       if (!elements[index].isValid(this._validationContext)) {
         this.isValidState = false
-        this.setValueAtPath(["errors"].concat(depth).concat(key).concat(`${index}`), elements[index].errors)
+        this.setValueAtPath(errorPathFor(depth.concat(key)).concat(["elements", index]), elements[index].errors)
       }
     }
   }
+}
+
+/**
+ * Translates a schema depth path into the corresponding path within the errors tree.
+ * String segments are field names (-> "fields"), number segments are array indices (-> "elements").
+ * Example: ["items", 0, "name"] -> ["errors", "fields", "items", "elements", 0, "fields", "name"]
+ * @param {Array<string|number>} depth
+ * @returns {Array<string|number>}
+ * @private
+ */
+const errorPathFor = (depth) => {
+  const path = ["errors"]
+  for (const segment of depth) {
+    path.push("number" === typeof segment ? "elements" : "fields")
+    path.push(segment)
+  }
+  return path
 }
 
 /**
@@ -111,7 +128,7 @@ export const validateProperty = function (depth, propertyConfiguration) {
   // get the value and the dType
   const propValue = this.getValueAtPath(depth)
   const dType = propertyConfiguration.dType
-  const errors = [] // basket for all errors
+  const issues = [] // basket for all failures of this field
 
 
   // 1. STEP: check validation breakers like "allowBlank" or "validateIf"
@@ -126,14 +143,14 @@ export const validateProperty = function (depth, propertyConfiguration) {
 
     if (!nestedContract.isValid(this._validationContext)) {
       this.isValidState = false
-      this.setValueAtPath(["errors"].concat(depth), nestedContract.errors)
+      this.setValueAtPath(errorPathFor(depth), nestedContract.errors)
     }
   } else {
     for (const validationName of validations) { // iterate over all validations
       if (undefined !== this._validations.normal[validationName]) { // check if validation is defined
         if (!this._validations.normal[validationName].check({value: propValue, config: propertyConfiguration[validationName], dType, depth, contract: this})) { // validate -> validation returns true if valid
           const errorMessage = this._getErrorMessageFor(propValue, propertyConfiguration, dType, depth, "normal", validationName)
-          errors.push(errorMessage)
+          issues.push({validation: validationName, message: errorMessage})
           this.isValidState = false
         }
       }
@@ -144,13 +161,13 @@ export const validateProperty = function (depth, propertyConfiguration) {
         if ("boolean" === typeof resultOfCustomValidation) { // if it returns a boolean and is false, it is invalid, but no custom error message is provided
           if (!resultOfCustomValidation) {
             this.isValidState = false
-            errors.push(this._getGenericErrorMessage())
+            issues.push({validation: "validate", message: this._getGenericErrorMessage()})
           } // use generic error message
         } else if ("string" === typeof resultOfCustomValidation) {
-          errors.push(resultOfCustomValidation)
+          issues.push({validation: "validate", message: resultOfCustomValidation})
           this.isValidState = false
         } else {
-          errors.push(this._getGenericErrorMessage())
+          issues.push({validation: "validate", message: this._getGenericErrorMessage()})
           this.isValidState = false
         }
       }
@@ -158,8 +175,8 @@ export const validateProperty = function (depth, propertyConfiguration) {
   }
 
 
-  // 3. STEP assign errors if any
-  if (errors.length > 0) this.setValueAtPath(["errors"].concat(depth).concat("messages"), errors)
+  // 3. STEP assign issues if any
+  if (issues.length > 0) this.setValueAtPath(errorPathFor(depth).concat("issues"), issues)
 }
 
 /**

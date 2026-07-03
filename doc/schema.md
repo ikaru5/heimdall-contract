@@ -66,9 +66,7 @@ The available types are "String", "Number", "Boolean", "Generic", "Array", and "
 
 Another magic field is errors at the root level of any contract. It will be written by calling the [validations](validation.md).
 
-**Attention**: Another limitation is that you can not use the errors property as a field name at the root of a contract.
-
-**Attention**: The key `messages` is reserved inside the errors object: it always holds the array of error messages of a field (or the outer messages of an array field, next to the numeric element keys). A field named `messages` would make its error object ambiguous, so avoid `messages` as a field name.
+**Attention**: Another limitation is that you can not use the errors property as a field name at the root of a contract. Any other field name is fine - the [errors object](errors.md) keeps field names in their own `fields` namespace, so they never collide with structural keys.
 
 All [validations](validation.md) are mixed within the schema object. Also, custom validation can be defined.
 

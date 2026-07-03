@@ -103,7 +103,9 @@ describe("handling of special and rare cases", () => {
   it('handles unknown dType as Generic', () => {
     const testContract = new TestContractD()
     expect(testContract.isValid()).toBe(false)
-    expect(testContract.errors).toStrictEqual({valueA: {messages: ['"null" is not a valid Some Invalid']}})
+    expect(testContract.errors).toStrictEqual({
+      fields: {valueA: {issues: [{validation: "dType", message: "\"null\" is not a valid Some Invalid"}]}}
+    })
     expect(testContract.toObject()).toStrictEqual({
       valueA: null
     })

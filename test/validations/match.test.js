@@ -23,6 +23,6 @@ describe("match validation", () => {
 
     regexContract.value = "Test- fswe 325"
     expect(regexContract.isValid()).toBe(false)
-    expect(regexContract.errors).toStrictEqual({value: {messages: ["invalid"]}})
+    expect(regexContract.errors).toStrictEqual({fields: {value: {issues: [{validation: "match", message: "invalid"}]}}})
   })
 })

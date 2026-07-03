@@ -157,13 +157,40 @@ describe("arrays", () => {
     expect(mixedTypeArrayContract.isValid()).toBe(false)
 
     expect(mixedTypeArrayContract.errors).toStrictEqual({
-      "mixedSimpleTypeValues": {
-        "0": { "messages": [ "must be greater than or equal to 3" ] },
-        "1": { "messages": [ "must have at least 3 characters" ] }
-      },
-      "addressesContracted": {
-        "0": { "city": { "messages": [ "not present" ] }, "plz": { "messages": [ "not present" ] }, "streetNumber": { "messages": [ "not present", "\"1\" is not a valid Number" ] } },
-        "2": { "city": { "messages": [ "not present" ] }, "plz": { "messages": [ "not present" ] }, "streetNumber": { "messages": [ "not present", "\"null\" is not a valid Number" ] }
+      fields: {
+        mixedSimpleTypeValues: {
+          elements: {
+            "0": {issues: [{validation: "min", message: "must be greater than or equal to 3"}]},
+            "1": {issues: [{validation: "min", message: "must have at least 3 characters"}]}
+          }
+        },
+        addressesContracted: {
+          elements: {
+            "0": {
+              fields: {
+                city: {issues: [{validation: "presence", message: "not present"}]},
+                plz: {issues: [{validation: "presence", message: "not present"}]},
+                streetNumber: {
+                  issues: [
+                    {validation: "presence", message: "not present"},
+                    {validation: "dType", message: "\"1\" is not a valid Number"}
+                  ]
+                }
+              }
+            },
+            "2": {
+              fields: {
+                city: {issues: [{validation: "presence", message: "not present"}]},
+                plz: {issues: [{validation: "presence", message: "not present"}]},
+                streetNumber: {
+                  issues: [
+                    {validation: "presence", message: "not present"},
+                    {validation: "dType", message: "\"null\" is not a valid Number"}
+                  ]
+                }
+              }
+            }
+          }
         }
       }
     })
@@ -241,9 +268,7 @@ describe("arrays", () => {
 
     expect(() => contract.isValid()).not.toThrow()
     expect(contract.isValid()).toBe(false)
-    expect(contract.errors).toStrictEqual({
-      numbers: {messages: ['"null" is not a valid Array']}
-    })
+    expect(contract.errors).toStrictEqual({fields: {numbers: {issues: [{validation: "dType", message: "\"null\" is not a valid Array"}]}}})
   })
 
   it('should treat null/undefined elements of a contract array as empty contracts instead of throwing', () => {
@@ -271,9 +296,13 @@ describe("arrays", () => {
     expect(() => contract.isValid()).not.toThrow()
     expect(contract.isValid()).toBe(false)
     expect(contract.errors).toStrictEqual({
-      items: {
-        0: {name: {messages: ["not present"]}},
-        1: {name: {messages: ["not present"]}},
+      fields: {
+        items: {
+          elements: {
+            "0": {fields: {name: {issues: [{validation: "presence", message: "not present"}]}}},
+            "1": {fields: {name: {issues: [{validation: "presence", message: "not present"}]}}}
+          }
+        }
       }
     })
     expect(contract.items[0].isAssignedEmpty).toBe(true) // same behavior as assign() with null
@@ -283,7 +312,9 @@ describe("arrays", () => {
     assignedContract.assign({items: [null, {name: "Alice"}]})
     expect(assignedContract.isValid()).toBe(false)
     expect(assignedContract.errors).toStrictEqual({
-      items: {0: {name: {messages: ["not present"]}}}
+      fields: {
+        items: {elements: {"0": {fields: {name: {issues: [{validation: "presence", message: "not present"}]}}}}}
+      }
     })
   })
 

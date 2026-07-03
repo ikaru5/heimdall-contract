@@ -33,9 +33,11 @@ describe("isEmail validation", () => {
     testContract.valueC = "some@valid.com"
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ["must be a valid E-Mail"]},
-      valueB: {messages: ["must be a valid E-Mail"]},
-      valueC: {messages: ["must not be an E-Mail"]},
+      fields: {
+        valueA: {issues: [{validation: "isEmail", message: "must be a valid E-Mail"}]},
+        valueB: {issues: [{validation: "isEmail", message: "must be a valid E-Mail"}]},
+        valueC: {issues: [{validation: "isEmail", message: "must not be an E-Mail"}]}
+      }
     })
   })
 })

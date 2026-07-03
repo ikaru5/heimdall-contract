@@ -87,7 +87,7 @@ describe("tryTranslateMessages functionality", () => {
     
     expect(contract.isValid()).toBe(false)
     // undefined triggers both dType and presence validations, both use the same custom errorMessage
-    expect(contract.errors.valueA.messages).toStrictEqual([
+    expect(contract.errors.fields.valueA.issues.map((issue) => issue.message)).toStrictEqual([
       "translated: custom.error.message",
       "translated: custom.error.message"
     ])
@@ -98,7 +98,7 @@ describe("tryTranslateMessages functionality", () => {
     contract.valueB = "abc" // Too short for min: 5
     
     expect(contract.isValid()).toBe(false)
-    expect(contract.errors.valueB.messages).toStrictEqual(["translated: custom.default.message"])
+    expect(contract.errors.fields.valueB.issues.map((issue) => issue.message)).toStrictEqual(["translated: custom.default.message"])
   })
 
   it('should translate errorMessage[validationName] when tryTranslateMessages is enabled', () => {
@@ -107,7 +107,7 @@ describe("tryTranslateMessages functionality", () => {
     
     expect(contract.isValid()).toBe(false)
     // undefined triggers dType validation (uses built-in i18next message) AND presence validation (uses custom message)
-    expect(contract.errors.valueC.messages).toStrictEqual([
+    expect(contract.errors.fields.valueC.issues.map((issue) => issue.message)).toStrictEqual([
       "translated: errors:dType.String,errors:dType.default",
       "translated: custom.presence.message"
     ])
@@ -119,7 +119,7 @@ describe("tryTranslateMessages functionality", () => {
     
     expect(contract.isValid()).toBe(false)
     // undefined triggers both dType and presence validations, both use the same function errorMessage
-    expect(contract.errors.valueD.messages).toStrictEqual([
+    expect(contract.errors.fields.valueD.issues.map((issue) => issue.message)).toStrictEqual([
       "function error message",
       "function error message"
     ])
@@ -131,7 +131,7 @@ describe("tryTranslateMessages functionality", () => {
     
     expect(contract.isValid()).toBe(false)
     // undefined triggers both dType and presence validations, both use the same custom errorMessage
-    expect(contract.errors.valueA.messages).toStrictEqual([
+    expect(contract.errors.fields.valueA.issues.map((issue) => issue.message)).toStrictEqual([
       "custom.error.message",
       "custom.error.message"
     ])
@@ -143,7 +143,7 @@ describe("tryTranslateMessages functionality", () => {
     
     expect(contract.isValid()).toBe(false)
     // undefined triggers both dType and presence validations, both use the same custom errorMessage
-    expect(contract.errors.valueA.messages).toStrictEqual([
+    expect(contract.errors.fields.valueA.issues.map((issue) => issue.message)).toStrictEqual([
       "custom.error.message",
       "custom.error.message"
     ])
@@ -158,19 +158,27 @@ describe("tryTranslateMessages functionality", () => {
     
     expect(contract.isValid()).toBe(false)
     expect(contract.errors).toStrictEqual({
-      valueA: {messages: [
-        "translated: custom.error.message",
-        "translated: custom.error.message"
-      ]},
-      valueB: {messages: ["translated: custom.default.message"]},
-      valueC: {messages: [
-        "translated: errors:dType.String,errors:dType.default",
-        "translated: custom.presence.message"
-      ]},
-      valueD: {messages: [
-        "function error message",
-        "function error message"
-      ]},
+      fields: {
+        valueA: {
+          issues: [
+            {validation: "dType", message: "translated: custom.error.message"},
+            {validation: "presence", message: "translated: custom.error.message"}
+          ]
+        },
+        valueB: {issues: [{validation: "min", message: "translated: custom.default.message"}]},
+        valueC: {
+          issues: [
+            {validation: "dType", message: "translated: errors:dType.String,errors:dType.default"},
+            {validation: "presence", message: "translated: custom.presence.message"}
+          ]
+        },
+        valueD: {
+          issues: [
+            {validation: "dType", message: "function error message"},
+            {validation: "presence", message: "function error message"}
+          ]
+        }
+      }
     })
   })
 })

@@ -130,23 +130,27 @@ describe("extend validations", () => {
 
     expect(contract.isValid()).toBe(false)
     expect(contract.errors).toStrictEqual({
-      valueA: { messages: [ "\"Rico\" is not Oliver >:-(" ] },
-      valueB: { messages: [ "\"Rico\" is not Wrong Rico >:-(" ] },
-      nesting: {
-        valueA: { messages: [ "\"Rico\" is not Oliver >:-(" ] }
-      },
-      array: {
-        "0": { messages: [ "\"Rico\" is not Oliver >:-(" ] },
-        messages: [ "must have at least 3 elements" ]
-      },
-      nestingContract: { name: { messages: [ "\"Rico\" is not Oliver >:-(" ] } },
-      nestingArrayContract: {
-        "0": { name: { messages: [ "\"Rico\" is not Oliver >:-(" ] } },
-        "1": { name: { messages: [ "\"Rico\" is not Oliver >:-(" ] } }
-      },
-      nestingArrayContractWithin: {
-        "0": { street: { messages: [ "\"Rico\" is not Oliver >:-(" ] } },
-        messages: [ "must have at least 3 elements" ]
+      fields: {
+        valueA: {issues: [{validation: "mustBeOliver", message: "\"Rico\" is not Oliver >:-("}]},
+        valueB: {issues: [{validation: "mustBeRico", message: "\"Rico\" is not Wrong Rico >:-("}]},
+        nesting: {fields: {valueA: {issues: [{validation: "mustBeOliver", message: "\"Rico\" is not Oliver >:-("}]}}},
+        array: {
+          issues: [{validation: "min", message: "must have at least 3 elements"}],
+          elements: {"0": {issues: [{validation: "mustBeOliver", message: "\"Rico\" is not Oliver >:-("}]}}
+        },
+        nestingContract: {fields: {name: {issues: [{validation: "mustBeOliver", message: "\"Rico\" is not Oliver >:-("}]}}},
+        nestingArrayContract: {
+          elements: {
+            "0": {fields: {name: {issues: [{validation: "mustBeOliver", message: "\"Rico\" is not Oliver >:-("}]}}},
+            "1": {fields: {name: {issues: [{validation: "mustBeOliver", message: "\"Rico\" is not Oliver >:-("}]}}}
+          }
+        },
+        nestingArrayContractWithin: {
+          issues: [{validation: "min", message: "must have at least 3 elements"}],
+          elements: {
+            "0": {fields: {street: {issues: [{validation: "mustBeOliver", message: "\"Rico\" is not Oliver >:-("}]}}}
+          }
+        }
       }
     })
   })
@@ -169,18 +173,20 @@ describe("extend validations", () => {
 
     expect(contract.isValid()).toBe(false)
     expect(contract.errors).toStrictEqual({
-      valueB: { messages: [ "\"Oliver\" is not Wrong Rico >:-(" ] },
-      array: {
-        "0": { messages: [ "\"Rico\" is not Oliver >:-(" ] },
-        messages: [ "must have at least 3 elements" ]
-      },
-      nestingContract: { street: { messages: [ "\"Oliver\" is not Rico >:-(" ] } },
-      nestingArrayContract: {
-        "0": { street: { messages: [ "\"Oliver\" is not Rico >:-(" ] } },
-        "1": { street: { messages: [ "\"Oliver\" is not Rico >:-(" ] } },
-      },
-      nestingArrayContractWithin: {
-        messages: [ "must have at least 3 elements" ]
+      fields: {
+        valueB: {issues: [{validation: "mustBeRico", message: "\"Oliver\" is not Wrong Rico >:-("}]},
+        array: {
+          issues: [{validation: "min", message: "must have at least 3 elements"}],
+          elements: {"0": {issues: [{validation: "mustBeOliver", message: "\"Rico\" is not Oliver >:-("}]}}
+        },
+        nestingContract: {fields: {street: {issues: [{validation: "mustBeRico", message: "\"Oliver\" is not Rico >:-("}]}}},
+        nestingArrayContract: {
+          elements: {
+            "0": {fields: {street: {issues: [{validation: "mustBeRico", message: "\"Oliver\" is not Rico >:-("}]}}},
+            "1": {fields: {street: {issues: [{validation: "mustBeRico", message: "\"Oliver\" is not Rico >:-("}]}}}
+          }
+        },
+        nestingArrayContractWithin: {issues: [{validation: "min", message: "must have at least 3 elements"}]}
       }
     })
   })

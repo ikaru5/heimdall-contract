@@ -78,6 +78,24 @@ const primary: string = remapped.primary
 // @ts-expect-error - the schema key is remapped away in the output
 remapped.internal
 
+// ---------------------------------------------------------------------------------------
+// the errors tree is typed: fields keys autocomplete, nested and array errors compose
+// ---------------------------------------------------------------------------------------
+
+const emailIssues = contract.errors.fields?.email?.issues
+const streetIssues = contract.errors.fields?.address?.fields?.street?.issues
+const tagElementIssues = contract.errors.fields?.tags?.elements?.[0]?.issues
+const contactFieldIssues = contract.errors.fields?.addresses?.elements?.[0]?.fields?.street?.issues
+const issueValidation: string | undefined = contract.errors.fields?.email?.issues?.[0].validation
+
+// errorsAt and flatErrors are typed
+const nodeAt = contract.errorsAt("address.street")
+const nodeAtIssues = nodeAt?.issues
+const flat = contract.flatErrors()
+const flatPath: Array<string | number> = flat[0].path
+const flatMessage: string = flat[0].message
+const flatValidation: string = flat[0].validation
+
 // @ts-expect-error - email is a string, not a number
 const wrongFieldType: number = contract.email
 

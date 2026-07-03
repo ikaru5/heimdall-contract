@@ -33,12 +33,34 @@ describe("errorMessage property", () => {
 
     expect(testContract.isValid()).toBe(false)
     expect(testContract.errors).toStrictEqual({
-      valueA: {messages: ["test error message 1"]},
-      valueB: {messages: ["test error message 2"]},
-      valueC: {messages: ["test error message min", "test error message max"]},
-      valueD: {messages: ["test error message min", "test error message max"]},
-      valueE: {messages: ["test error message min", "test error message default"]},
-      valueF: {messages: ["test error message min", "test error message default"]},
+      fields: {
+        valueA: {issues: [{validation: "min", message: "test error message 1"}]},
+        valueB: {issues: [{validation: "min", message: "test error message 2"}]},
+        valueC: {
+          issues: [
+            {validation: "min", message: "test error message min"},
+            {validation: "max", message: "test error message max"}
+          ]
+        },
+        valueD: {
+          issues: [
+            {validation: "min", message: "test error message min"},
+            {validation: "max", message: "test error message max"}
+          ]
+        },
+        valueE: {
+          issues: [
+            {validation: "min", message: "test error message min"},
+            {validation: "max", message: "test error message default"}
+          ]
+        },
+        valueF: {
+          issues: [
+            {validation: "min", message: "test error message min"},
+            {validation: "max", message: "test error message default"}
+          ]
+        }
+      }
     })
   })
 })

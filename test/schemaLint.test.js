@@ -201,7 +201,9 @@ describe("schema linting", () => {
       parent.assign({items: [{name: "cool"}, {name: "uncool"}]})
       expect(parent.isValid()).toBe(false)
       expect(parent.errors).toStrictEqual({
-        items: {1: {name: {messages: ["is not cool"]}}}
+        fields: {
+          items: {elements: {"1": {fields: {name: {issues: [{validation: "isCool", message: "is not cool"}]}}}}}
+        }
       })
 
       // a standalone contract with the same schema does not know "isCool" and reports it

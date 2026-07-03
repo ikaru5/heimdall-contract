@@ -129,6 +129,7 @@ Inherit from your base class and define your contracts! Have Fun!
   - [Inheritance](doc/api.md#inheritance)
 - [Schema](doc/schema.md)
   - [Schema Linting](doc/schema.md#schema-linting)
+- [Errors](doc/errors.md)
 - [Mixed type Arrays](doc/mixed_type_arrays.md)
 - [Validation](doc/validation.md)
     - [Breaker](doc/validation.md#validation-breakers)
@@ -221,7 +222,6 @@ Heimdall Contract is feature complete for its core mission. On the way to 1.0:
 Ideas beyond 1.0:
 
 - typed `assign()` input
-- a helper for flattening the errors object into a list of `{path, messages}` entries
 
 All notable changes are tracked in the [Changelog](CHANGELOG.md).
 
