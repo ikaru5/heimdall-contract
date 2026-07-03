@@ -180,7 +180,7 @@ export default class Contract {
    */
   flatErrors(_node = this.errors, _path = [], _out = []) {
     if (undefined !== _node.issues) {
-      for (const issue of _node.issues) _out.push({path: _path, validation: issue.validation, message: issue.message})
+      for (const issue of _node.issues) _out.push({path: [..._path], validation: issue.validation, message: issue.message}) // copy the path, so entries never share array instances
     }
     if (undefined !== _node.fields) {
       for (const key of Object.keys(_node.fields)) this.flatErrors(_node.fields[key], _path.concat(key), _out)

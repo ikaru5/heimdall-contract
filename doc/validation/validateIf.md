@@ -46,7 +46,7 @@ it('doesnt outbreaks if true returned', () => {
   testContract.valueA = "invalid"// too short for min: 10
   expect(testContract.isValid()).toBe(false)
   expect(testContract.errors).toStrictEqual({
-    valueA: {messages: ["must have at least 10 characters"]},
+    fields: {valueA: {issues: [{validation: "min", message: "must have at least 10 characters"}]}},
   })
 })
 ```
