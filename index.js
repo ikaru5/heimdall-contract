@@ -368,8 +368,8 @@ export default class Contract {
 
   /**
    * Checks whether a contract class is the one an array element's arrayElementType refers to.
-   * Prefers the instance's translationKey (stable across minification) and falls back to the
-   * class name for backwards compatibility.
+   * Prefers the class's static typeName (an explicit serialization identity, stable across
+   * minification) and falls back to the class name for backwards compatibility.
    * @param {Function} contractClass - Contract class constructor
    * @param {string} typeName - The element's arrayElementType value
    * @returns {boolean}
@@ -377,7 +377,7 @@ export default class Contract {
    */
   _matchesArrayElementType(contractClass, typeName) {
     if (typeof contractClass !== 'function') return false
-    return new contractClass().translationKey === typeName || contractClass.name === typeName
+    return (!!contractClass.typeName && contractClass.typeName === typeName) || contractClass.name === typeName
   }
 
   /**

@@ -19,11 +19,12 @@ Versions before 0.7.0 were not tracked in this changelog.
 
 ### Fixed
 
-- Mixed-typed arrays resolve their element contract class by the instance's `translationKey`
+- Mixed-typed arrays resolve their element contract class by the class's `static typeName`
   first, falling back to the class name. Class names are mangled by minifiers, which made
-  `arrayElementType` values in dispatched or persisted data unstable across builds -
-  `translationKey` is explicit and survives bundling. Existing data using class names keeps
-  matching as before.
+  `arrayElementType` values in dispatched or persisted data unstable across builds - declare
+  `static typeName = 'Note'` on element contracts to give them an explicit serialization
+  identity that survives bundling. Existing data using class names keeps matching as before.
+  See [Mixed type Arrays](doc/mixed_type_arrays.md).
 
 ## [0.10.0] - 2026-07-03
 

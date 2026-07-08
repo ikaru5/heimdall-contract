@@ -11,6 +11,18 @@ Define it like this: `arrayElementType: {dType: "String", presence: true}`
 
 You will also need to set it inside your input object on assignment. It will also be rendered in the output object when calling toObject().
 
+Heimdall resolves the matching contract class by comparing `arrayElementType` against the
+class's `static typeName` first and the class name second. Bundlers mangle class names, so
+declare an explicit identity on every element contract that leaves the current build
+(dispatched payloads, persisted data):
+
+```Javascript
+class PrivateAddressContract extends Contract {
+  static typeName = "PrivateAddress"
+  // ...
+}
+```
+
 ### Note about inline Contracts as Type
 They are not implemented yet. Not sure if they ever will be.
 

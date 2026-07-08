@@ -378,9 +378,9 @@ describe("arrays", () => {
     expect(Array.isArray(contract.contractArray)).toBe(true)
   })
 
-  it('matches mixed array element types by translationKey with class-name fallback', () => {
+  it('matches mixed array element types by static typeName with class-name fallback', () => {
     class NoteElementContract extends ContractBase {
-      translationKey = "Note"
+      static typeName = "Note"
 
       defineSchema() {
         return (
@@ -425,7 +425,7 @@ describe("arrays", () => {
     const contract = new AttachmentsContract()
     const input = {
       attachments: [
-        {arrayElementType: "Note", text: "stable across minification"}, // translationKey
+        {arrayElementType: "Note", text: "stable across minification"}, // static typeName
         {arrayElementType: "LinkElementContract", url: "https://example.com"} // class-name fallback
       ]
     }
