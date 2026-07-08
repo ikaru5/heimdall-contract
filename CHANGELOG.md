@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Versions before 0.7.0 were not tracked in this changelog.
 
+## [0.10.1] - 2026-07-08
+
+### Changed
+
+- `min` and `max` no longer log a `console.error` when the runtime value does not match the
+  field's `dType` (e.g. a string sitting in a `Number` field while the user is typing). That
+  state is reachable through legitimate user input and is already reported to the user by the
+  `dType` validation - the log only duplicated it as console noise and forced consumers to
+  suppress it. Schema-level mistakes (`min`/`max` on an unsupported `dType`) remain covered
+  by the schema lint.
+
 ## [0.10.0] - 2026-07-03
 
 ### Changed

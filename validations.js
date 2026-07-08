@@ -371,7 +371,9 @@ export const validationDefinitions = {
 
         if ("Number" === dType && "number" === typeof value) return value >= minCount
 
-        console.error(`Invalid dType: ${dType} for minimum validation on field '${depth}'`)
+        // A wrongly typed runtime value (e.g. a string in a Number field) is the
+        // dType validation's finding - min stays silent and passes. Schema-level
+        // mistakes (min on an unsupported dType) are caught by the schema lint.
         return true
       },
       /**
@@ -417,7 +419,10 @@ export const validationDefinitions = {
         if (isComparableString || isComparableArray) return value.length <= maxCount
 
         if ("Number" === dType && "number" === typeof value) return value <= maxCount
-        console.error(`Invalid dType: ${dType} for maximum validation on field '${depth}'`)
+
+        // A wrongly typed runtime value (e.g. a string in a Number field) is the
+        // dType validation's finding - max stays silent and passes. Schema-level
+        // mistakes (max on an unsupported dType) are caught by the schema lint.
         return true
       },
       /**

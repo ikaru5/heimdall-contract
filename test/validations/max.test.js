@@ -135,4 +135,33 @@ describe("max validation", () => {
 
     spy.mockRestore()
   })
+
+  it('stays silent on wrongly typed values - the dType validation owns that finding', () => {
+    class WrongTypeContract extends ContractBase {
+      defineSchema() {
+        return (
+          {
+            ...super.defineSchema(),
+            ...{
+              age: {dType: "Number", max: 5},
+            }
+          }
+        )
+      }
+    }
+
+    const spy = jest.spyOn(console, "error").mockImplementation(() => {})
+
+    const testContract = new WrongTypeContract()
+    testContract.age = "not-a-number"
+    spy.mockClear()
+
+    expect(testContract.isValid()).toBe(false) // the dType validation complains...
+    const validations = testContract.errors.fields.age.issues.map((issue) => issue.validation)
+    expect(validations).toContain("dType")
+    expect(validations).not.toContain("max") // ...max passes without console noise
+    expect(spy).not.toHaveBeenCalled()
+
+    spy.mockRestore()
+  })
 })
