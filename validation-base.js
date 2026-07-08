@@ -78,7 +78,7 @@ export const validateArray = function (depth, propertyConfiguration, key) {
       if ("function" !== typeof elements[index]?._parseParent) {
         elements[index] = this._createNestedContractForArray(
           Array.isArray(propertyConfiguration.arrayOf) ?
-            propertyConfiguration.arrayOf.find(contractClass => this._getNameOfClass(contractClass) === elements[index]?.["arrayElementType"]) :
+            propertyConfiguration.arrayOf.find(contractClass => this._matchesArrayElementType(contractClass, elements[index]?.["arrayElementType"])) :
             propertyConfiguration.arrayOf,
           elements[index]
         )

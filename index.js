@@ -235,7 +235,7 @@ export default class Contract {
                 } else {
                   // otherwise this is must be Contracts
                   if (null === inputValue[index] || "object" !== typeof inputValue[index]) console.error("Array of objects must be an array of objects! Property: " + _depth.concat(key).join(".") + " Index: " + index)
-                  const requiredContractClass = value.arrayOf.find(contractClass => this._getNameOfClass(contractClass) === inputValue[index]?.["arrayElementType"])
+                  const requiredContractClass = value.arrayOf.find(contractClass => this._matchesArrayElementType(contractClass, inputValue[index]?.["arrayElementType"]))
                   this.setValueAtPath(_depth.concat(key).concat(index), this._createNestedContractForArray(requiredContractClass, inputValue[index]))
                 }
               } else {  // must be a contract, but may fail if nonsense provided
@@ -328,7 +328,7 @@ export default class Contract {
                   // otherwise this is must be nested contract
                   if (element.toObject) return element.toObject()
                   // if elements were assigned directly no new nested contract was created, do it here!
-                  const requiredContractClass = value.arrayOf.find(contractClass => this._getNameOfClass(contractClass) === element["arrayElementType"])
+                  const requiredContractClass = value.arrayOf.find(contractClass => this._matchesArrayElementType(contractClass, element["arrayElementType"]))
                   return this._createNestedContractForArray(requiredContractClass, element).toObject()
                 }
               } else {
@@ -364,6 +364,20 @@ export default class Contract {
    */
   _getNameOfClass(className) {
     return typeof className === 'function' ? className.name : className
+  }
+
+  /**
+   * Checks whether a contract class is the one an array element's arrayElementType refers to.
+   * Prefers the instance's translationKey (stable across minification) and falls back to the
+   * class name for backwards compatibility.
+   * @param {Function} contractClass - Contract class constructor
+   * @param {string} typeName - The element's arrayElementType value
+   * @returns {boolean}
+   * @private
+   */
+  _matchesArrayElementType(contractClass, typeName) {
+    if (typeof contractClass !== 'function') return false
+    return new contractClass().translationKey === typeName || contractClass.name === typeName
   }
 
   /**

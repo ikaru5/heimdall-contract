@@ -378,4 +378,66 @@ describe("arrays", () => {
     expect(Array.isArray(contract.contractArray)).toBe(true)
   })
 
+  it('matches mixed array element types by translationKey with class-name fallback', () => {
+    class NoteElementContract extends ContractBase {
+      translationKey = "Note"
+
+      defineSchema() {
+        return (
+          {
+            ...super.defineSchema(),
+            ...{
+              arrayElementType: {dType: "String"},
+              text: {dType: "String", presence: true}
+            }
+          }
+        )
+      }
+    }
+
+    class LinkElementContract extends ContractBase {
+      defineSchema() {
+        return (
+          {
+            ...super.defineSchema(),
+            ...{
+              arrayElementType: {dType: "String"},
+              url: {dType: "String", presence: true}
+            }
+          }
+        )
+      }
+    }
+
+    class AttachmentsContract extends ContractBase {
+      defineSchema() {
+        return (
+          {
+            ...super.defineSchema(),
+            ...{
+              attachments: {dType: "Array", arrayOf: [NoteElementContract, LinkElementContract]}
+            }
+          }
+        )
+      }
+    }
+
+    const contract = new AttachmentsContract()
+    const input = {
+      attachments: [
+        {arrayElementType: "Note", text: "stable across minification"}, // translationKey
+        {arrayElementType: "LinkElementContract", url: "https://example.com"} // class-name fallback
+      ]
+    }
+    contract.assign(input)
+
+    expect(contract.toObject()).toStrictEqual(input)
+    expect(contract.isValid()).toBe(true)
+
+    // the resolved class validates the element: a Note without text must fail
+    contract.attachments = [{arrayElementType: "Note", text: ""}]
+    expect(contract.isValid()).toBe(false)
+    expect(contract.errorsAt("attachments.0.text").issues[0].validation).toBe("presence")
+  })
+
 })
