@@ -222,6 +222,13 @@ export default class Contract {
       if (undefined !== value.dType) {
         switch (value.dType) {
           case "Array":
+            // assign replaces the array as a whole - without truncation,
+            // re-assigning a shorter array left stale trailing elements
+            // behind ([1, 2] assigned with [3] became [3, 2])
+            const existingElements = this.getValueAtPath(_depth.concat(key))
+            if (Array.isArray(inputValue) && Array.isArray(existingElements) && existingElements.length > inputValue.length) {
+              existingElements.length = inputValue.length
+            }
             for (let index = 0; index < inputValue.length; index++) {
               // a missing arrayOf is reported by the schema lint, elements are assigned as they are
               if (undefined === value.arrayOf || "string" === typeof value.arrayOf) {

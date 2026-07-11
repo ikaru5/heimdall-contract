@@ -440,4 +440,34 @@ describe("arrays", () => {
     expect(contract.errorsAt("attachments.0.text").issues[0].validation).toBe("presence")
   })
 
+  it('drops stale trailing elements when a shorter array is assigned', () => {
+    class ReassignContract extends ContractBase {
+      defineSchema() {
+        return (
+          {
+            ...super.defineSchema(),
+            ...{
+              numbers: {dType: "Array", arrayOf: "Number"},
+              objects: {
+                dType: "Array",
+                arrayOf: {
+                  name: {dType: "String"}
+                }
+              }
+            }
+          }
+        )
+      }
+    }
+
+    const contract = new ReassignContract()
+    contract.assign({numbers: [1, 2], objects: [{name: "a"}, {name: "b"}]})
+    contract.assign({numbers: [3], objects: [{name: "c"}]})
+
+    expect(contract.toObject()).toStrictEqual({numbers: [3], objects: [{name: "c"}]})
+
+    contract.assign({numbers: [], objects: []})
+
+    expect(contract.toObject()).toStrictEqual({numbers: [], objects: []})
+  })
 })

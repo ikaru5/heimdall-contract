@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Versions before 0.7.0 were not tracked in this changelog.
 
+## [0.10.2] - 2026-07-09
+
+### Fixed
+
+- `assign()` replaces array values as a whole. Re-assigning a shorter array left the stale
+  trailing elements of the previous value in place (`[1, 2]` assigned with `[3]` became
+  `[3, 2]`) because elements were written index-wise without truncating the target first.
+
 ## [0.10.1] - 2026-07-08
 
 ### Changed
