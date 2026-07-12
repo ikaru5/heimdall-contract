@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Versions before 0.7.0 were not tracked in this changelog.
 
+## [0.11.0] - 2026-07-12
+
+### Added
+
+- `subscribeMutations(callback)`: the contract's EXPLICIT mutation API is observable now.
+  Notifications fire for `setValueAtPath` (which `assign` runs through), assign's array
+  truncation, validation runs (one summary event on path `"errors"`) and mutations
+  bubbling up from nested contracts - with element indexes located at notification time,
+  so array reordering can never produce stale paths. Returns an unsubscribe function.
+
+  Deliberately NOT observable: raw property writes and raw array mutations
+  (`contract.name = x`, `contract.items.push(...)`). Contracts stay plain,
+  validation-focused value holders without accessors, proxies or any instrumentation -
+  reactive editing belongs to an adapter's store API (e.g. heimdall-react-state's
+  `setValue`). This seam exists so adapters subscribe instead of patching methods.
+
 ## [0.10.2] - 2026-07-09
 
 ### Fixed

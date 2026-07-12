@@ -82,6 +82,8 @@ export default class Contract {
 
     /** @type {ErrorNode} */
     this.errors = {}
+    this._mutationSubscribers = []
+    this._parent = undefined
     this.init()
     if ("function" === typeof options?.initNested) {
       this.initNested = options.initNested.bind(this)
@@ -93,6 +95,84 @@ export default class Contract {
 
     this.isValidState = undefined
     this.isAssignedEmpty = false
+  }
+
+  /**
+   * Subscribe to mutations made through the contract's EXPLICIT API:
+   * setValueAtPath (which assign runs through), assign's array handling,
+   * validation runs (path "errors") and changes bubbling up from nested
+   * contracts. Deliberately NOT covered: raw property writes and raw array
+   * mutations (contract.name = x, contract.items.push(...)) - contracts stay
+   * plain validation-focused value holders without instrumentation; reactive
+   * editing belongs to an adapter's store API (e.g. heimdall-react-state's
+   * setValue).
+   * @param {function({path: string}): void} callback
+   * @returns {function} unsubscribe
+   */
+  subscribeMutations(callback) {
+    this._mutationSubscribers.push(callback)
+    return () => {
+      this._mutationSubscribers = this._mutationSubscribers.filter(subscriber => subscriber !== callback)
+    }
+  }
+
+  /**
+   * Notify subscribers and bubble to the parent contract (if any).
+   * @param {Array<string|number>} depth
+   * @private
+   */
+  _notifyMutation(depth) {
+    if (this._mutationSubscribers.length > 0) {
+      const event = {path: depth.join(".")}
+      for (const subscriber of [...this._mutationSubscribers]) {
+        try {
+          subscriber(event)
+        } catch (error) {
+          console.error(`Mutation subscriber threw: ${error}`)
+        }
+      }
+    }
+
+    this._parent?._notifyChildMutation?.(this, depth)
+  }
+
+  /**
+   * A nested contract mutated: locate it NOW (reorder-safe, never cached) and
+   * re-notify with the prefixed path.
+   * @private
+   */
+  _notifyChildMutation(child, childDepth) {
+    const prefix = this._locateChild(child, this.schema, [])
+    if (prefix) this._notifyMutation(prefix.concat(childDepth))
+  }
+
+  /**
+   * Finds the current path of a nested contract instance by walking the
+   * schema - dynamic on purpose, so array reordering can never leave stale
+   * paths behind.
+   * @private
+   */
+  _locateChild(child, schema, depth) {
+    for (const key of Object.keys(schema)) {
+      const config = schema[key]
+      if (this.contractConfig.ignoreUnderscoredFields && key.startsWith("_")) continue
+      if (null === config || "object" !== typeof config) continue
+
+      if (undefined === config.dType) {
+        const found = this._locateChild(child, config, depth.concat(key))
+        if (found) return found
+        continue
+      }
+      if ("Contract" === config.dType && this.getValueAtPath(depth.concat(key)) === child) {
+        return depth.concat(key)
+      }
+      if ("Array" === config.dType) {
+        const elements = this.getValueAtPath(depth.concat(key))
+        const index = Array.isArray(elements) ? elements.indexOf(child) : -1
+        if (index >= 0) return depth.concat(key, String(index))
+      }
+    }
+    return null
   }
 
   /**
@@ -151,6 +231,7 @@ export default class Contract {
     this.errors = {}
     this._validationContext = context
     this._validate()
+    this._notifyMutation(["errors"])
     return this.isValidState
   }
 
@@ -228,6 +309,7 @@ export default class Contract {
             const existingElements = this.getValueAtPath(_depth.concat(key))
             if (Array.isArray(inputValue) && Array.isArray(existingElements) && existingElements.length > inputValue.length) {
               existingElements.length = inputValue.length
+              this._notifyMutation(_depth.concat(key))
             }
             for (let index = 0; index < inputValue.length; index++) {
               // a missing arrayOf is reported by the schema lint, elements are assigned as they are
@@ -274,6 +356,9 @@ export default class Contract {
    */
   setValueAtPath(depth, value, object = this) {
     depth.reduce((o, p, i) => o[p] = depth.length === ++i ? value : o[p] || {}, object)
+    // the explicit mutation API is the observable seam - but internal error
+    // bookkeeping notifies once per validation run (see isValid), not per write
+    if (object === this && "errors" !== depth[0]) this._notifyMutation(depth)
   }
 
   /**
@@ -485,6 +570,7 @@ export default class Contract {
    * @private
    */
   _parseParent(parent) {
+    this._parent = parent // mutation notifications bubble up this chain
     this.contractConfig.customLocalization = parent.contractConfig.customLocalization
     this.contractConfig.tryTranslateMessages = parent.contractConfig.tryTranslateMessages
     this.contractConfig.ignoreUnderscoredFields = parent.contractConfig.ignoreUnderscoredFields
