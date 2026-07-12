@@ -104,6 +104,18 @@ describe("mutation subscriptions (explicit API only)", () => {
     expect(contract.name).toEqual("raw write") // values still land, of course
   })
 
+  it("keeps the observer plumbing out of enumeration - JSON.stringify stays acyclic", () => {
+    const contract = new CartContract()
+    contract.subscribeMutations(() => {})
+
+    // _parent backlinks on nested contracts would make this throw "circular structure"
+    const serialized = JSON.stringify(contract)
+
+    expect(serialized).not.toContain("_parent")
+    expect(serialized).not.toContain("_mutationSubscribers")
+    expect(Object.keys(contract.address)).not.toContain("_parent")
+  })
+
   it("supports unsubscribe and isolates throwing subscribers", () => {
     const contract = new CartContract()
     const seen = []

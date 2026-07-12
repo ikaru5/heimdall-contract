@@ -82,8 +82,10 @@ export default class Contract {
 
     /** @type {ErrorNode} */
     this.errors = {}
-    this._mutationSubscribers = []
-    this._parent = undefined
+    // non-enumerable: observers and the parent backlink must never leak into
+    // JSON.stringify/spread output - _parent would make serialization circular
+    Object.defineProperty(this, "_mutationSubscribers", { value: [], writable: true })
+    Object.defineProperty(this, "_parent", { value: undefined, writable: true })
     this.init()
     if ("function" === typeof options?.initNested) {
       this.initNested = options.initNested.bind(this)
